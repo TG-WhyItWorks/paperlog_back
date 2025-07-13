@@ -1,0 +1,45 @@
+from fastapi import APIRouter, Request, Depends, HTTPException
+from fastapi.responses import RedirectResponse, JSONResponse
+from starlette.config import Config
+from sqlalchemy.ext.asyncio import AsyncSession
+from database import get_db
+from .oauth import oauth
+from .jwt import create_access_token
+from domain.user import user_crud, user_schema
+
+router = APIRouter(prefix='/auth', tags=['auth'])
+
+@router.get('/google')
+async def google_login(request: Request):
+    redirect_uri = request.url_for('google_auth')
+    return await oauth.google.authorize_redirect(request, redirect_uri)
+
+@router.get('/google/callback', name="google_auth")
+async def google_auth(request: Request, session: AsyncSession = Depends(get_db)):
+    token = await oauth.google.authorize_access_token(request)
+
+    id_token = token.get("id_token")
+    if not id_token:
+        raise HTTPException(status_code=400, detail="id_token not found")
+
+    user_info = token.get("userinfo") or await oauth.google.parse_id_token(request, token)
+    email = user_info.get("email")
+    name = user_info.get("name")
+
+    if not email:
+        raise HTTPException(status_code=400, detail="No email provided by Google")
+
+    # DB 사용자 확인 및 없으면 생성
+    user = await user_crud.get_or_create_google_user(session, email=email, username=name)
+
+    # JWT 생성
+    access_token = create_access_token({"sub": email})
+
+    return JSONResponse({
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": {
+            "email": email,
+            "username": name
+        }
+    })
