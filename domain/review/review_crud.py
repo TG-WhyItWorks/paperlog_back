@@ -33,7 +33,9 @@ async def get_review_list(db: AsyncSession, skip: int = 0, limit: int = 10, keyw
         )
 
     count_query = base_query.with_only_columns(Review.id).subquery()
-    total_result = await db.execute(select([func.count()]).select_from(count_query))
+     # ✅ 수정된 코드
+    total_result = await db.execute(select(func.count()).select_from(count_query))
+
     total = total_result.scalar_one()
 
     result = await db.execute(base_query.offset(skip).limit(limit))
