@@ -1,0 +1,29 @@
+# python bytecode 및 빌드 파일
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# 가상환경
+.venv/
+
+# SQLite DB 파일(로컬 테스트용 DB 무시)
+*.sqlite3
+
+# VSCode 설정
+.vscode/
+
+# MacOS 시스템 파일
+.DS_Store
+
+# Windows 시스템 파일
+Thumbs.db
+
+# 환경파일
+.env
+
+# 로그, 캐시
+*.log
+.cache/
+
+# alembic 사용시 생성되는 로컬 DB
+*.db
