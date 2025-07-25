@@ -8,7 +8,7 @@ from domain.review import review_crud
 from domain.user.user_router import get_current_user
 from models import User
 
-router = APIRouter(prefix="/api/comment")
+router = APIRouter(prefix="/api/comment",tags=["Comment"])
 
 
 

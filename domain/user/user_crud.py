@@ -28,12 +28,20 @@ async def get_existing_user(db: AsyncSession, user_create: UserCreate):
     return result.scalar_one_or_none()
     
     
-async def get_user(db: AsyncSession, username: str):
+async def get_user_by_username(db: AsyncSession, username: str):
     stmt = select(User).where(User.username == username)
     result = await db.execute(stmt)
     return result.scalar_one_or_none()
 
+async def get_user_by_userId(db: AsyncSession, user_id: int):
+    stmt = select(User).where(User.id == user_id)
+    result = await db.execute(stmt)
+    return result.scalar_one_or_none()
 
+
+async def get_user_by_email(db: AsyncSession, email: str) -> User | None:
+    result = await db.execute(select(User).where(User.email == email))
+    return result.scalar_one_or_none()
 
 async def get_or_create_google_user(session: AsyncSession, email: str, username: str):
     result = await session.execute(select(User).where(User.email == email))
@@ -42,7 +50,7 @@ async def get_or_create_google_user(session: AsyncSession, email: str, username:
     if user:
         return user
 
-    user = User(email=email, username=username, password="", phonenumber="")
+    user = User(email=email, username=username, password=None, phonenumber=None)
     session.add(user)
     await session.commit()
     await session.refresh(user)
@@ -50,6 +58,3 @@ async def get_or_create_google_user(session: AsyncSession, email: str, username:
 
 
 
-async def get_user_by_email(session: AsyncSession, email: str) -> User | None:
-    result = await session.execute(select(User).where(User.email == email))
-    return result.scalar_one_or_none()

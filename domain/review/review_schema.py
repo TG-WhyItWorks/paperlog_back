@@ -4,8 +4,20 @@ from pydantic import BaseModel,field_validator,ConfigDict
 from domain.comment.comment_schema import Comment
 from domain.user.user_schema import User
 from fastapi import Form, File, UploadFile
-from typing import Optional
+from typing import Optional, List
 
+
+
+
+
+
+
+class ReviewImageRead(BaseModel):
+    id: int
+    image_path: str
+    upload_date: datetime
+
+    model_config=ConfigDict(from_attributes=True)
 
 
 class Review(BaseModel):
@@ -16,13 +28,16 @@ class Review(BaseModel):
     comment:list[Comment]=[]
     user:User|None    
     modify_date: datetime.datetime | None = None
-
+    paper_id: Optional[int]
+    images:List[ReviewImageRead]
+    
     model_config=ConfigDict(from_attributes=True)
         
         
 class ReviewCreate(BaseModel): 
     title:str
     content:str
+    paper_id=Optional[int] =None
     
     @field_validator('title', 'content')
     def not_empty(cls,v):
@@ -38,9 +53,19 @@ class ReviewList(BaseModel):
 class ReviewUpdate(ReviewCreate):
     review_id:int
     
+    
 
 class ReviewDelete(BaseModel):
     review_id:int
+
+
+
+
+
+
+
+
+
 
 
 def get_review_form(

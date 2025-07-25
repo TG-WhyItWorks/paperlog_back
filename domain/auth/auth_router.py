@@ -25,7 +25,7 @@ async def google_auth(request: Request, session: AsyncSession = Depends(get_db))
     user_info = token.get("userinfo") or await oauth.google.parse_id_token(request, token)
     email = user_info.get("email")
     name = user_info.get("name")
-
+    
     if not email:
         raise HTTPException(status_code=400, detail="No email provided by Google")
 
@@ -33,13 +33,17 @@ async def google_auth(request: Request, session: AsyncSession = Depends(get_db))
     user = await user_crud.get_or_create_google_user(session, email=email, username=name)
 
     # JWT 생성
-    access_token = create_access_token({"sub": email})
+    access_token = create_access_token({
+        "sub": str(user.id),
+        "email": user.email})
 
     return JSONResponse({
         "access_token": access_token,
         "token_type": "bearer",
         "user": {
+            "id":user.id,
             "email": email,
-            "username": name
+            "username": name,
+            
         }
     })
