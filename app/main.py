@@ -10,3 +10,10 @@ app.add_middleware(
     SessionMiddleware,
     secret_key=os.getenv("secret_key")
 )
+
+
+
+
+@app.get("/")
+async def tester():
+    return{"message": "nothing page"}
