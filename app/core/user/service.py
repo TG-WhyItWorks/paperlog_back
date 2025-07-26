@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.core.user.schemas import UserCreate
-from models import User
+from app.core.user.models import User
 from passlib.context import CryptContext
 
 

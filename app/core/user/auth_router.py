@@ -5,16 +5,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.common.dependencies import get_db
 from .oauth import oauth
 from app.common.security import create_access_token
-import service, schemas
+from app.core.user import schemas,service
 
-router = APIRouter(prefix='/auth', tags=['auth'])
 
-@router.get('/google')
+auth_router=APIRouter()
+@auth_router.get('/google')
 async def google_login(request: Request):
     redirect_uri = request.url_for('google_auth')
     return await oauth.google.authorize_redirect(request, redirect_uri)
 
-@router.get('/google/callback', name="google_auth")
+@auth_router.get('/google/callback', name="google_auth")
 async def google_auth(request: Request, session: AsyncSession = Depends(get_db)):
     token = await oauth.google.authorize_access_token(request)
 
