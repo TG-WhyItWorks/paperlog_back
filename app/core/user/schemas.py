@@ -40,7 +40,7 @@ class Token(BaseModel):
     access_token:str
     token_type:str
     username:str
-    userid:int
+    user_id:int
     
 
 
