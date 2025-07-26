@@ -21,8 +21,8 @@ class Review(Base):
                        nullable=False)
     user_id=Column(Integer,ForeignKey("user.id"),nullable=True)
     user=relationship("User",backref="review_users")  
-    paper_id=Column(Integer,ForeignKey("paper.id"),nullable=True)
-    paper=relationship("Paper",backref="review_papers") 
+    #paper_id=Column(Integer,ForeignKey("paper.id"),nullable=True)
+    #paper=relationship("Paper",backref="review_papers") 
     images = relationship("ReviewImage", back_populates="review", cascade="all, delete-orphan")
     
     
