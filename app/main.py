@@ -9,6 +9,7 @@ app.add_middleware(
     SessionMiddleware,
     secret_key=os.getenv("secret_key")
 )
+from app.api.v1.router import router as api_v1_router
 
 app = FastAPI()
 
@@ -22,4 +23,37 @@ app.add_middleware(
 
 @app.get("/")
 async def tester():
-    return{"message": "nothing page"}
+    return{"message": "서버 정상적으로 작동중입니다"}
+
+
+app.include_router(api_v1_router, prefix="/api/v1")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
