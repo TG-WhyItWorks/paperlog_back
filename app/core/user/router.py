@@ -10,12 +10,17 @@ from app.core.user import service, schemas
 from app.core.user.service import pwd_context,get_user_by_email
 from datetime import datetime, UTC
 import os
+from dotenv import load_dotenv
 
+load_dotenv() 
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24
 SECRET_KEY = os.getenv("JWT_SECRET_KEY")
 ALGORITHM = "HS256"
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/user/login")
 
+
+if not SECRET_KEY:
+    raise RuntimeError("Environment variable JWT_SECRET_KEY is not set.")
 
 
 user_router = APIRouter()

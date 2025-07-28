@@ -4,29 +4,18 @@ from pydantic import BaseModel,field_validator,ConfigDict
 from app.core.user.schemas import User
 from fastapi import Form, File, UploadFile
 from typing import Optional, List
-
-
+from app.core.comment.schemas import Comment
 
 
 
 class ReviewImageRead(BaseModel):
     id: int
     image_path: str
-    upload_date: datetime
+    upload_date: datetime.datetime
 
     model_config=ConfigDict(from_attributes=True)
 
 
-class Comment(BaseModel):
-    id:int
-    content:str
-    create_date:datetime.datetime
-    user:User | None    
-    review_id:int
-    modify_date: datetime.datetime | None = None
-
-    
-    model_config=ConfigDict(from_attributes=True)
 
 class Review(BaseModel):
     id:int
@@ -45,7 +34,7 @@ class Review(BaseModel):
 class ReviewCreate(BaseModel): 
     title:str
     content:str
-    paper_id=Optional[int] =None
+    paper_id:Optional[int] =None
     
     @field_validator('title', 'content')
     def not_empty(cls,v):
@@ -69,23 +58,7 @@ class ReviewDelete(BaseModel):
 
 
 
-class CommentCreate(BaseModel):
-    content:str
-    
-    @field_validator('content')
-    def not_empty(cls, v):
-        if not v or not v.strip():
-            raise ValueError('빈 값은 허용되지 않습니다.')
-        return v
-    
 
-    
-    
-class CommentUpdate(CommentCreate):
-    comment_id:int
-        
-class CommentDelete(BaseModel):
-    comment_id:int
 
 
 

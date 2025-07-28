@@ -26,7 +26,7 @@ async def tester():
     return{"message": "서버 정상적으로 작동중입니다"}
 
 
-app.include_router(api_v1_router, prefix="/api/v1")
+app.include_router(api_v1_router)
 
 
 
