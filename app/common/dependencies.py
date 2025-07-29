@@ -22,7 +22,7 @@ ALGORITHM = "HS256"
 
 
 
-async def get_db():
+async def get_db():#비동기 방식임(get_async_session)
     async with SessionLocal() as session:
         yield session
         

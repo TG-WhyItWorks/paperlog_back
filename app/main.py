@@ -11,12 +11,6 @@ app.add_middleware(
 )
 from app.api.v1.router import router as api_v1_router
 
-app = FastAPI()
-
-app.add_middleware(
-    SessionMiddleware,
-    secret_key=os.getenv("secret_key")
-)
 
 
 

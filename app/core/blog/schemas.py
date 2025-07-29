@@ -22,11 +22,11 @@ class Review(BaseModel):
     title:str
     content:str
     create_date:datetime.datetime
-    comment:list[Comment]=[]
+    comment:list[Comment] = []
     user:User|None    
     modify_date: datetime.datetime | None = None
     paper_id: Optional[int]
-    images:List[ReviewImageRead]
+    images:List[ReviewImageRead] = []
     
     model_config=ConfigDict(from_attributes=True)
         
@@ -37,10 +37,12 @@ class ReviewCreate(BaseModel):
     paper_id:Optional[int] =None
     
     @field_validator('title', 'content')
+    @classmethod
     def not_empty(cls,v):
         if not v or not v.strip():
             raise ValueError('빈 값은 허용하지 않습니다')
         return v
+
 
 class ReviewList(BaseModel):
     total : int =0
@@ -57,16 +59,6 @@ class ReviewDelete(BaseModel):
 
 
 
-
-
-
-
-
-
-
-
-
-
 def get_review_form(
     title: str = Form(...),
     content: str = Form(...),
@@ -77,3 +69,17 @@ def get_review_form(
         "content": content,
         "image": image
     }
+    
+    
+    
+"""아래는 논문과 리뷰 연결에 필요한 코드"""
+
+class ReviewOutSimple(BaseModel):# 논문 상세정보와 함께 뜰 연관 리뷰 요약 리스트
+    id: int
+    title: str
+    content: str
+    create_date: datetime.datetime
+    user: Optional[User]
+    
+    model_config = ConfigDict(from_attributes=True)
+

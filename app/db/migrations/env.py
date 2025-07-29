@@ -7,11 +7,11 @@ from alembic import context
 
 from app.db.base import Base
 
-
+# 모델 import
 from app.core.user.models import User
-
 from app.core.comment.models import Comment
 from app.core.blog.models import Review
+from app.core.search.models import Paper
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
