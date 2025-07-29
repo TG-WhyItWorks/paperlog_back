@@ -3,6 +3,7 @@ from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 from app.core.search.models import Paper
 from app.core.search import arxiv_parser, repository
+from app.core.blog.models import Review
 
 
 async def search_and_store_papers(
@@ -23,7 +24,7 @@ async def search_and_store_papers(
 async def get_paper_with_reviews(db: AsyncSession, arxiv_id: str):
     result = await db.execute(
         select(Paper)
-        .options(selectinload(Paper.reviews).selectinload("user"))
+        .options(selectinload(Paper.reviews).selectinload(Review.user))
         .filter(Paper.arxiv_id == arxiv_id)
     )
     return result.scalar_one_or_none()

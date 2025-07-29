@@ -11,7 +11,7 @@ from sqlalchemy import func
 
 
 async def get_review_list(db: AsyncSession, skip: int = 0, limit: int = 10, keyword: str = ''):
-    base_query = select(Review).options(selectinload(Review.user)).order_by(Review.create_date.desc())
+    base_query = select(Review).options(selectinload(Review.user), selectinload(Review.images)).order_by(Review.create_date.desc())
 
     if keyword:
         keyword_pattern = f"%{keyword}%"
@@ -48,7 +48,7 @@ async def get_review_list(db: AsyncSession, skip: int = 0, limit: int = 10, keyw
 
 
 async def get_review(db: AsyncSession, review_id: int):
-    stmt = select(Review).options(selectinload(Review.user)).where(Review.id == review_id)
+    stmt = select(Review).options(selectinload(Review.user), selectinload(Review.images)).where(Review.id == review_id)
     result = await db.execute(stmt)
     return result.scalars().first()
 

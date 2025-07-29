@@ -1,5 +1,5 @@
 from datetime import datetime
-
+from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.exc import NoResultFound
@@ -23,7 +23,7 @@ async def create_comment(db: AsyncSession, review: Review, comment_create: Comme
     return db_comment
 
 async def get_comment(db: AsyncSession, comment_id: int) -> Comment | None:
-    result = await db.execute(select(Comment).where(Comment.id == comment_id))
+    result = await db.execute(select(Comment).options(selectinload(Comment.user)).where(Comment.id == comment_id))
     return result.scalar_one_or_none()
 
 async def update_comment(db: AsyncSession, db_comment: Comment, comment_update: CommentUpdate):
