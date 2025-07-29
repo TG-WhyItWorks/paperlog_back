@@ -6,8 +6,8 @@ from datetime import datetime
 
 class Paper(Base):
     __tablename__ = "papers"
-    
-    arxiv_id = Column(Integer, primary_key=True, index=True)#arxiv 내 논문 고유 ID
+    id = Column(Integer, primary_key=True, index=True)
+    arxiv_id = Column(String, unique=True, index=True)#arxiv 내 논문 고유 ID
     title = Column(String(300), nullable=False)
     authors = Column(String(300), nullable=False)
     summary = Column(Text, nullable=True)
@@ -19,7 +19,7 @@ class Paper(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    blogs = relationship("Review", back_populates="paper", cascade="all, delete-orphan")
+    reviews = relationship("Review", back_populates="paper", cascade="all, delete-orphan", lazy="selectin") # lazy="selectin" -> 비동기 환경에서 안전한 eager 로딩
     
     
     # 디버그용 로그 출력 -> print(paper) 하면 title, authors 출력됨.

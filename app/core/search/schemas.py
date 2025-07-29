@@ -1,4 +1,4 @@
-from pydantic import BaseModel, HttpUrl
+from pydantic import BaseModel, HttpUrl, field_validator
 from datetime import datetime
 from typing import List, Optional
 from app.core.blog.schemas import ReviewOutSimple
@@ -22,12 +22,27 @@ class ArxivSearchRequest(BaseModel):
     
 
 class PaperOut(PaperCreate):
-    id: int
+    id :int
     updated_at: datetime
     created_at: datetime
-    updated_at: datetime
     
-    blogs: List[ReviewOutSimple] = [] # 블로그 간략화 리스트
+    reviews: List[ReviewOutSimple] = [] # review 간략화 리스트
+    
+    # authors와 categories를 str -> list
+    @field_validator('authors', mode="before")
+    @classmethod
+    def parse_authors(cls, v):
+        if isinstance(v, str):
+            return [a.strip() for a in v.split(",")]
+        return v
+    
+    
+    @field_validator('categories', mode="before")
+    @classmethod
+    def parse_categories(cls, v):
+        if isinstance(v, str):
+            return [c.strip() for c in v.split(",")]
+        return v
     
     class Config:
         from_attributes = True
@@ -43,3 +58,4 @@ class PaperUpdate(BaseModel):
     categories: Optional[List[str]] = None
     link: Optional[HttpUrl] = None
     comment: Optional[str] = None
+    arxiv_id: Optional[str] = None

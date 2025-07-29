@@ -25,7 +25,7 @@ class Review(BaseModel):
     comment:list[Comment] = []
     user:User|None    
     modify_date: datetime.datetime | None = None
-    paper_id: Optional[int]
+    paper_id: Optional[int]# paper_id = arxiv_id
     images:List[ReviewImageRead] = []
     
     model_config=ConfigDict(from_attributes=True)
@@ -78,7 +78,7 @@ class ReviewOutSimple(BaseModel):# 논문 상세정보와 함께 뜰 연관 리�
     id: int
     title: str
     content: str
-    create_date: datetime.datetime
+    modify_date: datetime.datetime
     user: Optional[User]
     
     model_config = ConfigDict(from_attributes=True)
