@@ -1,12 +1,17 @@
 
-from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey,func,UniqueConstraint
+from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey,func,UniqueConstraint,Table
 from sqlalchemy.orm import relationship
 from fastapi_users.db import SQLAlchemyBaseUserTable
 from app.db.base import Base
 from datetime import datetime,UTC
 
 
-
+review_voter = Table(
+    'review_voter',
+    Base.metadata,
+    Column('user_id', Integer, ForeignKey('user.id'), primary_key=True),
+    Column('review_id', Integer, ForeignKey('review.id'), primary_key=True)
+)
 
 
 class Review(Base):
@@ -24,7 +29,7 @@ class Review(Base):
     paper_id=Column(Integer,ForeignKey("papers.arxiv_id"))
     paper = relationship("Paper", back_populates="reviews")
     images = relationship("ReviewImage", back_populates="review", cascade="all, delete-orphan")
-    
+    voter = relationship('User', secondary=review_voter, backref='review_voters')
     
     
     
