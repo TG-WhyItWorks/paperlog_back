@@ -1,7 +1,7 @@
 from sqlalchemy.orm import relationship
 from sqlalchemy import Column, Integer, String, Text, DateTime
 from app.db.base import Base
-from datetime import datetime
+from datetime import datetime, UTC
 
 
 class Paper(Base):
@@ -16,8 +16,8 @@ class Paper(Base):
     publish_updated = Column(String(300), nullable=False)
     categories = Column(String(300), nullable=True) # arxiv에 개제된 후 업데이트 시
     doi = Column(String(200), nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC))
     
     reviews = relationship("Review", back_populates="paper", cascade="all, delete-orphan", lazy="selectin") # lazy="selectin" -> 비동기 환경에서 안전한 eager 로딩
     

@@ -1,5 +1,7 @@
 from pydantic import BaseModel, field_validator, EmailStr,ConfigDict
 from pydantic_core.core_schema import FieldValidationInfo
+from datetime import datetime
+from typing import Optional
 
 class UserCreate(BaseModel):
     username:str
@@ -54,3 +56,14 @@ class UserRead(BaseModel):
 
 
 
+class FolderRead(BaseModel):
+    id: int
+    folder_name: str
+    parent_folder_id: Optional[int] = None
+    created_at: datetime
+    
+    mocdel_config = ConfigDict(from_attributes=True)
+    
+
+class UserWithFolders(UserRead):
+    folders: list[FolderRead] = []
