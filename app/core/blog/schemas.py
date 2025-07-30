@@ -58,7 +58,10 @@ class ReviewDelete(BaseModel):
     review_id:int
 
 
-
+class ReviewVote(BaseModel):
+    review_id: int
+    
+    
 def get_review_form(
     title: str = Form(...),
     content: str = Form(...),

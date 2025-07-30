@@ -11,22 +11,6 @@ from app.core.user.models import User
 review_router = APIRouter()
 
 
-# ✅ 리뷰 목록 조회
-@review_router.get("/list", response_model=schemas.ReviewList)
-async def review_list(
-    db: AsyncSession = Depends(get_db),
-    page: int = 0,
-    size: int = 10,
-    keyword: str = ""
-):
-    total, _review_list = await service.get_review_list(
-        db, skip=page * size, limit=size, keyword=keyword
-    )
-    return {
-        "total": total,
-        "review_list": _review_list
-    }
-
 
 # ✅ 리뷰 상세 조회
 @review_router.get("/detail/{review_id}", response_model=schemas.Review)
@@ -76,3 +60,29 @@ async def review_delete(
         raise HTTPException(status_code=403, detail="삭제 권한이 없습니다")
     await service.delete_review(db=db, db_review=db_review)
     return {"message": "삭제 완료"}
+
+
+
+@review_router.post("/vote", status_code=status.HTTP_204_NO_CONTENT)
+async def review_vote(_review_vote: schemas.ReviewVote,
+                        db: AsyncSession = Depends(get_db),
+                        current_user: User = Depends(get_current_user)):
+    db_review = await service.get_review(db, review_id=_review_vote.review_id)
+    if not db_review:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail="데이터를 찾을수 없습니다.")
+    await service.vote_review(db, db_review=db_review, db_user=current_user)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
