@@ -21,8 +21,8 @@ async def create_user(db: AsyncSession, user_create: UserCreate):
 async def get_existing_user(db: AsyncSession, user_create: UserCreate):
     stmt = select(User).where(
         (User.username == user_create.username) |
-        (User.email == user_create.email) |
-        (User.phonenumber == user_create.phonenumber)
+        (User.email == user_create.email) 
+        
     )
     result = await db.execute(stmt)
     return result.scalar_one_or_none()

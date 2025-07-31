@@ -15,7 +15,7 @@ from sqlalchemy import func
 
 
 async def get_review(db: AsyncSession, review_id: int):
-    stmt = select(Review).options(selectinload(Review.user), selectinload(Review.images)).where(Review.id == review_id)
+    stmt = select(Review).options(selectinload(Review.user)).where(Review.id == review_id)
     result = await db.execute(stmt)
     return result.scalars().first()
 
@@ -34,7 +34,6 @@ async def create_review(db: AsyncSession, review_create: ReviewCreate, user: Use
     return db_review
 
 
-
 async def update_review(db: AsyncSession, db_review: Review, review_update: ReviewUpdate):
     db_review.title = review_update.title
     db_review.content = review_update.content
@@ -42,14 +41,20 @@ async def update_review(db: AsyncSession, db_review: Review, review_update: Revi
     db.add(db_review)
     await db.flush()
     await db.commit()
-    await db.refresh(db_review)
     return db_review
+
+
 
 
 
 async def delete_review(db: AsyncSession, db_review: Review):
     await db.delete(db_review)
     await db.commit()
+
+
+
+
+
 
 
 

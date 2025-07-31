@@ -21,9 +21,8 @@ class Review(Base):
     id=Column(Integer,primary_key=True, autoincrement=True)# 1부터 시작
     title=Column(String,nullable=False)
     content=Column(Text,nullable=False)
-    create_date=Column(DateTime(timezone=True),
-                       server_default=func.now(),
-                       nullable=False)
+    create_date=Column(DateTime, nullable=True)
+    modify_date = Column(DateTime, nullable=True)
     user_id=Column(Integer,ForeignKey("user.id"),nullable=True)
     user=relationship("User",backref="review_users")  
     paper_id=Column(Integer,ForeignKey("papers.arxiv_id"))
@@ -31,9 +30,7 @@ class Review(Base):
     images = relationship("ReviewImage", back_populates="review", cascade="all, delete-orphan")
     voter = relationship('User', secondary=review_voter, backref='review_voters')
     
-    
-    
-    
+ 
 class ReviewImage(Base):
     __tablename__="review_image"
     

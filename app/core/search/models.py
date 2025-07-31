@@ -18,7 +18,7 @@ class Paper(Base):
     doi = Column(String(200), nullable=True)
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
     updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC))
-    
+    readpapers = relationship("ReadPaper",back_populates="paper",lazy="selectin")
     reviews = relationship("Review", back_populates="paper", cascade="all, delete-orphan", lazy="selectin") # lazy="selectin" -> 비동기 환경에서 안전한 eager 로딩
     
     

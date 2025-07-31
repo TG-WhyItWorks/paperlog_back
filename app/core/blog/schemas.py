@@ -25,12 +25,15 @@ class Review(BaseModel):
     comment:list[Comment] = []
     user:User|None    
     modify_date: datetime.datetime | None = None
-    paper_id: Optional[int]# paper_id = arxiv_id
+    paper_id: Optional[int]
     images:List[ReviewImageRead] = []
     
     model_config=ConfigDict(from_attributes=True)
-        
-        
+       
+
+
+
+   
 class ReviewCreate(BaseModel): 
     title:str
     content:str

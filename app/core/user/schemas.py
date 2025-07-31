@@ -62,7 +62,7 @@ class FolderRead(BaseModel):
     parent_folder_id: Optional[int] = None
     created_at: datetime
     
-    mocdel_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True)
     
 
 class UserWithFolders(UserRead):

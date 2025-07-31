@@ -5,9 +5,9 @@ from app.db.base import Base
 
 
 class Folder(Base):
-    __tableame__ = "folders"
+    __tablename__ = "folders"
     
-    id = Column(Integer, Primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True)
     folder_name = Column(String(200), nullable=False)
     user_id = Column(Integer, ForeignKey("user.id"), nullable=False)
     parent_folder_id = Column(Integer, ForeignKey("folders.id"), nullable=True)

@@ -11,7 +11,8 @@ from app.core.user.models import User
 from app.core.comment.models import Comment
 from app.core.blog.models import Review
 from app.core.search.models import Paper
-
+from app.core.readpaper.models import ReadPaper
+from app.core.folder.models import Folder
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
