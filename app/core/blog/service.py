@@ -8,7 +8,7 @@ from app.core.blog.models import Review,review_voter
 from app.core.search.models import Paper
 from app.core.comment.models import Comment
 from sqlalchemy import func,desc,asc,func
-
+from typing import List
 async def search_reviews(
     db: AsyncSession, keyword: str = '', skip: int = 0, limit: int = 10
 ):
@@ -95,17 +95,6 @@ async def get_reviews_list_date(db: AsyncSession, limit: int = 10):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
 async def get_review(db: AsyncSession, review_id: int):
     stmt = select(Review).options(selectinload(Review.user), selectinload(Review.images)).where(Review.id == review_id)
     result = await db.execute(stmt)
@@ -161,7 +150,7 @@ async def vote_review(db: AsyncSession, review_id: int, user: User):
     if not db_review:
         raise Exception("리뷰를 찾을 수 없습니다.")
 
-    # 중복 추가 방지
+    
     if user not in db_review.voter:
         db_review.voter.append(user)
         await db.commit()
@@ -171,10 +160,33 @@ async def vote_review(db: AsyncSession, review_id: int, user: User):
 
 
 async def get_review_vote_count(db: AsyncSession, review_id: int) -> int:
-    # review_voter는 secondary 테이블
+    
     stmt = select(func.count()).select_from(review_voter).where(
         review_voter.c.review_id == review_id
     )
     result = await db.execute(stmt)
     vote_count = result.scalar_one()
     return vote_count
+
+
+
+
+async def get_liked_review(db:AsyncSession,user:User)->List[Review]:
+    stmt = (
+        select(Review)
+        .join(review_voter, review_voter.c.review_id == Review.id)
+        .where(review_voter.c.user_id == user.id)
+        .options(selectinload(Review.user), selectinload(Review.images))
+    )
+    result = await db.execute(stmt)
+    return result.scalars().all()
+
+
+
+
+
+
+
+
+
+

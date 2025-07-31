@@ -33,16 +33,6 @@ async def get_reviews_list_date(db: AsyncSession = Depends(get_db)):
 async def get_reviews_list_vote(db: AsyncSession = Depends(get_db)):
     return await service.get_reviews_list_vote(db, limit=10)
 
-
-
-
-
-
-
-
-
-
-
 #  리뷰 상세 조회
 @review_router.get("/detail/{review_id}", response_model=schemas.Review)
 async def review_detail(review_id: int, db: AsyncSession = Depends(get_db)):
@@ -137,6 +127,12 @@ async def get_vote_count(
     return {"review_id": review_id, "vote_count": count}
 
 
+@review_router.get("/liked-reviews", response_model=List[schemas.ReviewOutSimple])
+async def liked_reviews(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    return await service.get_liked_review(db, current_user)
 
 
 
