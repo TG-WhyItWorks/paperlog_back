@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from app.core.readpaper.schemas import ReadPaperCreate,ReadPaperUpdate
 from app.core.search.models import Paper
+from app.core.user.models import User
 from app.core.readpaper.models import ReadPaper
 from sqlalchemy import func
 from typing import List
@@ -15,9 +16,21 @@ async def get_readpaper(db: AsyncSession, readpaper_id: int):
     result = await db.execute(stmt)
     return result.scalars().first()
 
-async def create_readpaper(db: AsyncSession, readpaper_create: ReadPaperCreate):
+
+
+
+async def get_mypaper(db: AsyncSession, user_id: int) -> List[Paper]:
+    stmt = (
+        select(Paper)
+        .join(ReadPaper, ReadPaper.paper_id == Paper.id)
+        .where(ReadPaper.user_id == user_id)
+    )
+    result = await db.execute(stmt)
+    return result.scalars().all()
+
+async def create_readpaper(db: AsyncSession, readpaper_create: ReadPaperCreate,user:User):
     db_readpaper = ReadPaper(
-        user_id=readpaper_create.user_id,
+        user_id=user.id,
         paper_id=readpaper_create.paper_id,
         create_date=datetime.now(UTC)
     )

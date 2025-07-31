@@ -19,7 +19,7 @@ async def readpaper_create(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):  
-    await service.create_readpaper(db=db, readpaper_create=_readpaper_create)
+    await service.create_readpaper(db=db, readpaper_create=_readpaper_create,user=current_user)
     return {"message": "리뷰가 성공적으로 작성되었습니다."}
 
 # 수정
@@ -37,7 +37,7 @@ async def readpaper_update(
     await service.update_readpaper(db=db, db_readpaper=db_readpaper, readpaper_update=_readpaper_update)
     return {"message": "리뷰가 성공적으로 수정되었습니다."}
 
-# ✅ 리뷰 삭제
+# 삭제
 @readpaper_router.delete("/delete", status_code=status.HTTP_204_NO_CONTENT)
 async def readpaper_delete(
     _readpaper_delete: schemas.ReadPaperDelete,
@@ -53,6 +53,19 @@ async def readpaper_delete(
     return {"message": "삭제 완료"}
 
 
+#이거 써야함
+@readpaper_router.get(
+    "/my-papers",
+    response_model=List[PaperOut]
+)
+async def get_my_papers(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    return await service.get_mypaper(db, current_user.id)
+
+
+#이거는 쓰지 말기
 @readpaper_router.get(
     "/papers-by-user/{user_id}",
     response_model=List[PaperOut]  
