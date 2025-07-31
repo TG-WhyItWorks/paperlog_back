@@ -84,7 +84,7 @@ class ReviewOutSimple(BaseModel):# 논문 상세정보와 함께 뜰 연관 리�
     id: int
     title: str
     content: str
-    modify_date: datetime.datetime
+    modify_date: Optional[datetime.datetime]
     user: Optional[User]
     
     model_config = ConfigDict(from_attributes=True)
