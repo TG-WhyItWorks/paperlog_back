@@ -17,7 +17,7 @@ folder_router = APIRouter()
 async def create_folder(folder_in: schemas.FolderCreate,
                         db:AsyncSession = Depends(get_db),
                         user: User = Depends(get_current_user)):
-    return await repository.create_folder(db, user_id=id,
+    return await repository.create_folder(db, user_id=user.id,
                                           folder_name=folder_in.folder_name,
                                           parent_folder_id=folder_in.parent_folder_id)
     
@@ -38,9 +38,9 @@ async def delete_folder(folder_id: int,
                         db: AsyncSession = Depends(get_db),
                         user: User = Depends(get_current_user)):
     folder = await repository.get_folder_by_id(db, folder_id)
-    if not folder or folder.user_id != id:
+    if not folder or folder.user_id != user.id:
         raise HTTPException(status_code=404, detail="Folder not found")
-    await repository.delete_folder(db, folder)
+    await repository.delete_folder(db, folder_id)
     
     
 @folder_router.post("/{folder_id}/items")
@@ -84,7 +84,7 @@ async def get_folder_detail(folder_id: int,
     result = await db.execute(
         select(Folder)
         .options(
-            selectinload(Folder.subfolders),
+            selectinload(Folder.subfolders).selectinload(Folder.subfolders),
             selectinload(Folder.folder_papers).selectinload(FolderPaper.paper),
             selectinload(Folder.folder_papers).selectinload(FolderPaper.review)
         )

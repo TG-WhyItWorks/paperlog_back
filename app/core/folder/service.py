@@ -23,7 +23,7 @@ async def update_folder(
     return await repository.update_folder(
         db=db,
         folder=folder,
-        folder_name=folder_update.folder_name,
+        new_name=folder_update.folder_name,
         parent_folder_id=folder_update.parent_folder_id
     )
     
@@ -32,7 +32,7 @@ async def delete_folder(db: AsyncSession, folder_id: int):
     folder = await repository.get_folder_by_id(db, folder_id)
     if not folder:
         raise HTTPException(status_code=404, detail="Folder not found")
-    await repository.delete_folder(db, folder)
+    await repository.delete_folder(db, folder_id)
     
 async def add_paper_to_folder(db: AsyncSession, folder_id: int, paper_id: int):
     return await repository.create_folder_paper(db, folder_id=folder_id, paper_id=paper_id)

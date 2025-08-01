@@ -40,7 +40,7 @@ class FolderPaperCreate(BaseModel):
     
     @model_validator(mode='after')
     def validate(cls, values):
-        paper_id, review_id = values.get("paper_id"), values.get("review_id")
+        paper_id, review_id = values.paper_id, values.review_id
         if not paper_id and not review_id:
             raise ValueError("paper_id 또는 review_id 중 하나는 필요합니다.")
         return values

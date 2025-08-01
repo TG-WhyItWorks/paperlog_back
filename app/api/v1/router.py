@@ -1,6 +1,3 @@
-
-
-
 from fastapi import APIRouter
 from app.core.user.router import user_router
 from app.core.user.auth_router import auth_router

@@ -40,7 +40,30 @@ async def update_folder(db: AsyncSession, folder: Folder, new_name: str, parent_
     await db.refresh(folder)
     return folder
 
-async def delete_folder(db: AsyncSession, folder: Folder):
+async def delete_folder(db: AsyncSession, folder_id: int):
+    result = await db.execute(
+        select(Folder)
+        .options(
+            selectinload(Folder.subfolders),
+            selectinload(Folder.folder_papers)
+        )
+        .where(Folder.id == folder_id)
+    )
+    folder = result.scalar_one_or_none()
+    
+    if not folder:
+        return
+    
+    # 재귀적으로 하위 폴더 제거
+    subfolder_ids = [subfolder.id for subfolder in folder.subfolders]
+    for subfolder_id in subfolder_ids:
+        await delete_folder(db, subfolder_id)
+    
+    # 현재 폴더 FolderPaper 삭제
+    for fp in folder.folder_papers:
+        await db.delete(fp)
+        
+    # 현재 폴더 삭제
     await db.delete(folder)
     await db.commit()
     

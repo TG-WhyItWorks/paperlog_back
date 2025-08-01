@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, backref
 from datetime import datetime, UTC
 from app.db.base import Base
 
@@ -14,7 +14,12 @@ class Folder(Base):
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
     
     user = relationship("User", back_populates="folders", lazy="selectin")
-    parent_folder = relationship("Folder", remote_side=["id"], backref="subfolders", lazy="selectin")
+    parent_folder = relationship(
+        "Folder",
+        remote_side=lambda: [Folder.id],
+        backref=backref("subfolders", cascade="all, delete-orphan", lazy="selectin"),
+        lazy="selectin"
+    )
     folder_papers = relationship("FolderPaper", back_populates="folder", cascade="all, delete-orphan", lazy="selectin")
     
     
