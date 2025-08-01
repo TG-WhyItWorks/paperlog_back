@@ -20,7 +20,7 @@ class Paper(Base):
     updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC))
     readpapers = relationship("ReadPaper",back_populates="paper",lazy="selectin")
     reviews = relationship("Review", back_populates="paper", cascade="all, delete-orphan", lazy="selectin") # lazy="selectin" -> 비동기 환경에서 안전한 eager 로딩
-    
+    folder_papers = relationship("FolderPaper", back_populates="paper", lazy="selectin")
     
     # 디버그용 로그 출력 -> print(paper) 하면 title, authors 출력됨.
     def __repr__(self):

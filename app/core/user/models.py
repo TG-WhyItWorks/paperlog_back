@@ -14,4 +14,4 @@ class User(Base):
     phonenumber = Column(String, unique=True, nullable=True)
     modify_date = Column(DateTime, nullable=True)
     readpapers= relationship("ReadPaper", back_populates="user",lazy="selectin")
-   # folders = relationship("Folder", back_populates="user", lazy="selectin")
+    folders = relationship("Folder", back_populates="user", lazy="selectin")

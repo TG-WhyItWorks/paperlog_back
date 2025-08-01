@@ -29,7 +29,8 @@ class Review(Base):
     paper = relationship("Paper", back_populates="reviews")
     images = relationship("ReviewImage", back_populates="review", cascade="all, delete-orphan")
     voter = relationship('User', secondary=review_voter, backref='review_voters')
-    
+    folder_papers = relationship("FolderPaper", back_populates="review", lazy="selectin")
+ 
  
 class ReviewImage(Base):
     __tablename__="review_image"

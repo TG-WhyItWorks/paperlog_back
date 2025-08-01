@@ -32,7 +32,7 @@ async def update_paper(db: AsyncSession, db_paper: Paper, paper_data: dict):
     # paper_data 내 필드를 db_paper에 업데이트
     for key, value in paper_data.items():
         setattr(db_paper, key, value)
-    db_paper.updated_at = lambda: datetime.now(UTC)
+    db_paper.updated_at = datetime.now(UTC)
         
         
 async def save_new_papers(db: AsyncSession, papers: list[dict]):
