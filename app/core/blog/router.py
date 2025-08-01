@@ -45,11 +45,20 @@ async def review_detail(review_id: int, db: AsyncSession = Depends(get_db)):
 #  리뷰 작성
 @review_router.post("/create", status_code=201)
 async def review_create(
-    _review_create:schemas.ReviewCreate,
+    title: str = Form(...),
+    content: str = Form(...),
+    paper_id: Optional[int] = Form(None),
+    images: Optional[List[UploadFile]] = File(None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    await service.create_review(db=db, review_create=_review_create, user=current_user)
+    review_data = schemas.ReviewCreate(title=title, content=content, paper_id=paper_id)
+    await service.create_review(
+        db=db,
+        review_create=review_data,
+        user=current_user,
+        images=images,
+    )
     return {"message": "리뷰가 성공적으로 작성되었습니다."}
 
 #  리뷰 수정
