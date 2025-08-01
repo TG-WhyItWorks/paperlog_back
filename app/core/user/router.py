@@ -11,6 +11,10 @@ from app.core.user.service import pwd_context,get_user_by_email
 from datetime import datetime, UTC
 import os
 from dotenv import load_dotenv
+from app.common.security import create_access_token
+from fastapi.responses import JSONResponse
+
+
 
 load_dotenv() 
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24
@@ -51,18 +55,18 @@ async def login_for_access_token(
             detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    email=user.email
+    name=user.username
+    access_token = create_access_token(user_id=user.id, email=user.email)
+    
 
-    data = {
-        "sub": str(user.id),
-        "email":user.email,
-        "exp": datetime.now(UTC) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-                
-    }
-    access_token = jwt.encode(data, SECRET_KEY, algorithm=ALGORITHM)
-
-    return {
+    return JSONResponse({
         "access_token": access_token,
         "token_type": "bearer",
-        "username": user.username,
-        "user_id":user.id
-    }
+        "user": {
+            "id":user.id,
+            "email": email,
+            "username": name,
+            
+        }
+    })
