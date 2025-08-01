@@ -4,11 +4,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from app.core.blog.schemas import ReviewCreate, ReviewUpdate
 from app.core.user.models import User
-from app.core.blog.models import Review,review_voter
+from app.core.blog.models import Review,review_voter,ReviewImage
 from app.core.search.models import Paper
 from app.core.comment.models import Comment
 from sqlalchemy import func,desc,asc,func
-from typing import List
+from typing import List,Optional
+from uuid import uuid4
+import aiofiles
+import os
+from fastapi import UploadFile, File
+
+IMAGE_DIR = "static/images/reviews"
 async def search_reviews(
     db: AsyncSession, keyword: str = '', skip: int = 0, limit: int = 10
 ):
@@ -30,7 +36,6 @@ async def search_reviews(
                     Review.content.ilike(search),
                     UserAlias.username.ilike(search),
                     PaperAlias.title.ilike(search),
-                    
                 )
             )
         )
@@ -96,22 +101,49 @@ async def get_reviews_list_date(db: AsyncSession, limit: int = 10):
 
 
 async def get_review(db: AsyncSession, review_id: int):
-    stmt = select(Review).options(selectinload(Review.user), selectinload(Review.images)).where(Review.id == review_id)
+    stmt = select(Review).options(
+            selectinload(Review.user),
+            selectinload(Review.images),
+            selectinload(Review.voter),
+            selectinload(Review.paper),).where(Review.id == review_id)
     result = await db.execute(stmt)
     return result.scalars().first()
 
 
 
-async def create_review(db: AsyncSession, review_create: ReviewCreate, user: User):
+async def create_review(
+    db: AsyncSession,
+    review_create: ReviewCreate,
+    user: User,
+    images: Optional[List[UploadFile]] = None
+):
     db_review = Review(
         title=review_create.title,
         content=review_create.content,
         create_date=datetime.now(UTC),
-        user_id=user.id  
+        user_id=user.id,
+        paper_id=review_create.paper_id,
     )
     db.add(db_review)
     await db.commit()
     await db.refresh(db_review)
+
+    if images:
+        for image in images:
+            filename = f"{uuid4().hex}_{image.filename}"
+            filepath = os.path.join(IMAGE_DIR, filename)
+
+            async with aiofiles.open(filepath, "wb") as buffer:
+                await buffer.write(await image.read())
+
+            db_image = ReviewImage(
+                review_id=db_review.id,
+                image_path=filepath,
+            )
+            db.add(db_image)
+
+        await db.commit()
+
     return db_review
 
 
@@ -142,7 +174,10 @@ async def vote_review(db: AsyncSession, review_id: int, user: User):
     
     stmt = (
         select(Review)
-        .options(selectinload(Review.voter))
+        .options(selectinload(Review.user),
+            selectinload(Review.images),
+            selectinload(Review.voter),
+            selectinload(Review.paper),)
         .where(Review.id == review_id)
     )
     result = await db.execute(stmt)
@@ -176,7 +211,10 @@ async def get_liked_review(db:AsyncSession,user:User)->List[Review]:
         select(Review)
         .join(review_voter, review_voter.c.review_id == Review.id)
         .where(review_voter.c.user_id == user.id)
-        .options(selectinload(Review.user), selectinload(Review.images))
+        .options(selectinload(Review.user),
+            selectinload(Review.images),
+            selectinload(Review.voter),
+            selectinload(Review.paper),)
     )
     result = await db.execute(stmt)
     return result.scalars().all()

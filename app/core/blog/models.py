@@ -16,9 +16,9 @@ review_voter = Table(
 
 class Review(Base):
     __tablename__="review"
+    __table_args__ = {"sqlite_autoincrement": True}#이거 안하니까 글 삭제하면 문제 생김
 
-
-    id=Column(Integer,primary_key=True, autoincrement=True)# 1부터 시작
+    id=Column(Integer,primary_key=True, autoincrement=True)
     title=Column(String,nullable=False)
     content=Column(Text,nullable=False)
     create_date=Column(DateTime, nullable=True)
@@ -37,13 +37,19 @@ class ReviewImage(Base):
     
     id=Column(Integer,primary_key=True,autoincrement=True)
     review_id = Column(Integer, ForeignKey("review.id"), nullable=False)
-    image_path = Column(String, nullable=False)
+    image_path = Column(String, nullable=True)
     upload_date = Column(DateTime(timezone=True), server_default=func.now())
     
-    review=relationship("Review",back_populates="images")
+    review=relationship("Review",back_populates="images",lazy="selectin")
 
 
 
+        
+    
+    
+    
+    
+    
         
     
     
