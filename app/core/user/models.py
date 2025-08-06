@@ -6,7 +6,7 @@ from datetime import datetime,UTC
 
 class User(Base):
     __tablename__ = "user"
-
+    __table_args__ = {"sqlite_autoincrement": True}
     id=Column(Integer,primary_key=True)
     password=Column(String,nullable=True)
     username = Column(String, unique=False, nullable=False)

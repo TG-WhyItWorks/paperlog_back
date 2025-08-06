@@ -6,7 +6,7 @@ from datetime import datetime,UTC
 
 class Comment(Base):
     __tablename__="comment"
-
+    __table_args__ = {"sqlite_autoincrement": True}
 
     id=Column(Integer,primary_key=True, autoincrement=True)
     content=Column(Text,nullable=False)
