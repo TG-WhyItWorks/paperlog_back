@@ -57,6 +57,7 @@ class UserRead(BaseModel):
 
 class UserUpdate(BaseModel):
     nickname:str
+    phonenumber:str
     
     
 

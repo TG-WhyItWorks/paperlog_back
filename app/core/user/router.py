@@ -79,6 +79,7 @@ async def user_update(
     user: User = Depends(get_current_user)
 ):
     await update_user(db,user,_user_update)
+    return {"message":"수정 성공"}
     
     
 
