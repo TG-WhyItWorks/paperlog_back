@@ -59,6 +59,60 @@ async def search_reviews(
     reviews = result.scalars().all()
     return reviews
 
+
+
+
+
+async def search_reviews_VoteOrder(
+    db: AsyncSession, keyword: str = '', skip: int = 0, limit: int = 10
+):
+    query = select(
+            Review,
+            func.count(review_voter.c.user_id).label("vote_count")
+        )
+    
+    if keyword:
+        search = f"%{keyword}%"
+        from sqlalchemy.orm import aliased
+        UserAlias = aliased(User)
+        PaperAlias = aliased(Paper)
+        query = (
+            query
+            .join(UserAlias, Review.user_id == UserAlias.id, isouter=True)
+            .join(PaperAlias, Review.paper_id == PaperAlias.arxiv_id, isouter=True)
+            
+            .where(
+                or_(
+                    Review.title.ilike(search),
+                    Review.content.ilike(search),
+                    UserAlias.username.ilike(search),
+                    PaperAlias.title.ilike(search),
+                )
+            )
+        )
+
+    query = (
+        query
+        .order_by(desc("vote_count"),Review.create_date.desc())
+        .offset(skip)
+        .limit(limit)
+        .options(
+            selectinload(Review.user),
+            selectinload(Review.paper),
+            selectinload(Review.images),
+            selectinload(Review.voter),
+        )
+    )
+
+    result = await db.execute(query)
+    reviews = result.scalars().all()
+    return reviews
+
+
+
+
+
+
 async def get_reviews_list_vote(db: AsyncSession, limit: int = 10):
     
     stmt = (

@@ -22,6 +22,17 @@ async def search_review_list(
     reviews = await service.search_reviews(db=db, keyword=keyword, skip=skip, limit=limit)
     return reviews
 
+#검색- 제목 내용 글쓴이 + 좋아요 순으로 ... 
+@review_router.get("/search_voteorder", response_model=List[schemas.ReviewOutSimple])
+async def search_review_list(
+    keyword: str = Query('', description="검색어"),
+    skip: int = Query(0, ge=0, description="건너뛸 개수(페이징)"),
+    limit: int = Query(10, le=100, description="가져올 개수(페이징)"),
+    db: AsyncSession = Depends(get_db)
+):
+ 
+    reviews = await service.search_reviews_VoteOrder(db=db, keyword=keyword, skip=skip, limit=limit)
+    return reviews
 
 
 #제목 기준 리뷰검색
