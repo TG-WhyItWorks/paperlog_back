@@ -25,6 +25,7 @@ class Review(Base):
     modify_date = Column(DateTime, nullable=True)
     user_id=Column(Integer,ForeignKey("user.id"),nullable=True)
     user=relationship("User",backref="review_users")  
+    vote_count = Column(Integer, default=0, nullable=True)
     paper_id=Column(Integer,ForeignKey("papers.arxiv_id"))
     paper = relationship("Paper", back_populates="reviews")
     images = relationship("ReviewImage", back_populates="review", cascade="all, delete-orphan")

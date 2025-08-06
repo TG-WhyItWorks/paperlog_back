@@ -170,8 +170,8 @@ async def like_delete(
     return result
 
 #내가 쓴 리뷰
-@review_router.get("/my/comments", response_model=List[schemas.ReviewOutSimple])
-async def comments_by_review(
+@review_router.get("/my/reviews", response_model=List[schemas.ReviewOutSimple])
+async def get_my_reivews(
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):

@@ -38,6 +38,7 @@ class ReviewCreate(BaseModel):
     title:str
     content:str
     paper_id:Optional[int] =None
+    vote_count:int =0
     
     
 
@@ -81,6 +82,6 @@ class ReviewOutSimple(BaseModel):# 논문 상세정보와 함께 뜰 연관 리�
     content: str
     modify_date: Optional[datetime]
     user: Optional[User]
-    
+    vote_count:int
     model_config = ConfigDict(from_attributes=True)
 

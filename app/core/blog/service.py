@@ -204,13 +204,20 @@ async def vote_review(db: AsyncSession, review_id: int, user: User):
     
     if user not in db_review.voter:
         db_review.voter.append(user)
+        db_review.vote_count += 1 
         await db.commit()
         await db.refresh(db_review)
     return db_review
 
 
 
-async def delte_vote(db: AsyncSession, user_id: int, review_id: int):
+async def delete_vote(db: AsyncSession, user_id: int, review_id: int):
+  
+    stmt_review = select(Review).where(Review.id == review_id)
+    result_review = await db.execute(stmt_review)
+    db_review = result_review.scalars().first()
+    if not db_review:
+        return {"message": "리뷰를 찾을 수 없습니다."}
 
     stmt = (
         select(review_voter)
@@ -223,8 +230,7 @@ async def delte_vote(db: AsyncSession, user_id: int, review_id: int):
     like = result.first()
     
     if not like:
-
-        return {"message": "좋아요 없습니다"}
+        return {"message": "좋아요 없습니다", "vote_count": db_review.vote_count}
     
     delete_stmt = (
         delete(review_voter)
@@ -234,8 +240,12 @@ async def delte_vote(db: AsyncSession, user_id: int, review_id: int):
         )
     )
     await db.execute(delete_stmt)
+    
+    db_review.vote_count = max(0, db_review.vote_count - 1)
     await db.commit()
-    return {"message": "좋아요가 정상적으로 취소되었습니다."}
+    await db.refresh(db_review)
+    return {"message": "좋아요가 취소.", "vote_count": db_review.vote_count}
+
 
 async def get_review_vote_count(db: AsyncSession, review_id: int) -> int:
     
@@ -245,7 +255,6 @@ async def get_review_vote_count(db: AsyncSession, review_id: int) -> int:
     result = await db.execute(stmt)
     vote_count = result.scalar_one()
     return vote_count
-
 
 
 
@@ -267,7 +276,7 @@ async def get_liked_review(db:AsyncSession,user:User)->List[Review]:
 async def get_my_reviews(db: AsyncSession, user:User):
     stmt = (
      select(Review)
-    .where(Review.id == user.id)
+    .where(Review.user_id == user.id)
     
     )
     result = await db.execute(stmt)
@@ -389,7 +398,6 @@ async def search_reviews_user(
     result = await db.execute(query)
     reviews = result.scalars().all()
     return reviews
-
 
 
 

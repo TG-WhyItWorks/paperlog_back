@@ -36,7 +36,9 @@ async def get_comment(db: AsyncSession, comment_id: int) -> Comment | None:
 
 async def get_comments_by_review(db: AsyncSession, review_id: int):
     stmt = (
-     select(Comment)
+     select(Comment).options(
+            selectinload(Comment.user)
+     )
     .where(Comment.review_id == review_id)
     
     )
@@ -47,7 +49,7 @@ async def get_comments_by_review(db: AsyncSession, review_id: int):
 async def get_my_comments(db: AsyncSession, user:User):
     stmt = (
      select(Comment)
-    .where(Comment.review_id == user.id)
+    .where(Comment.user_id == user.id)
     
     )
     result = await db.execute(stmt)
