@@ -17,14 +17,43 @@ async def create_comment(db: AsyncSession, review: Review, comment_create: Comme
         create_date=datetime.now(),
         user=user
     )
+    if review is None:
+        return {"message": "리뷰가 없습니다."}
     db.add(db_comment)
     await db.commit()
     await db.refresh(db_comment)
     return db_comment
 
+
+
+
+
 async def get_comment(db: AsyncSession, comment_id: int) -> Comment | None:
     result = await db.execute(select(Comment).options(selectinload(Comment.user)).where(Comment.id == comment_id))
     return result.scalar_one_or_none()
+
+
+
+async def get_comments_by_review(db: AsyncSession, review_id: int):
+    stmt = (
+     select(Comment)
+    .where(Comment.review_id == review_id)
+    
+    )
+    result = await db.execute(stmt)
+    return result.scalars().all()
+
+
+async def get_my_comments(db: AsyncSession, user:User):
+    stmt = (
+     select(Comment)
+    .where(Comment.review_id == user.id)
+    
+    )
+    result = await db.execute(stmt)
+    return result.scalars().all()
+
+
 
 async def update_comment(db: AsyncSession, db_comment: Comment, comment_update: CommentUpdate):
     db_comment.content = comment_update.content

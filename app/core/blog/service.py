@@ -264,6 +264,14 @@ async def get_liked_review(db:AsyncSession,user:User)->List[Review]:
 
 
 
+async def get_my_reviews(db: AsyncSession, user:User):
+    stmt = (
+     select(Review)
+    .where(Review.id == user.id)
+    
+    )
+    result = await db.execute(stmt)
+    return result.scalars().all()
 
 
 

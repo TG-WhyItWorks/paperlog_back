@@ -10,7 +10,7 @@ from app.core.user.models import User
 from app.core.blog.models import Review
 review_router = APIRouter()
 
-#검색
+#검색- 제목 내용 글쓴이
 @review_router.get("/search", response_model=List[schemas.ReviewOutSimple])
 async def search_review_list(
     keyword: str = Query('', description="검색어"),
@@ -24,7 +24,7 @@ async def search_review_list(
 
 
 
-
+#제목 기준 리뷰검색
 @review_router.get("/search/title", response_model=List[schemas.ReviewOutSimple])
 async def search_review_list_title(
     keyword: str = Query('', description="검색어"),
@@ -36,7 +36,7 @@ async def search_review_list_title(
     reviews = await service.search_reviews_title(db=db, keyword=keyword, skip=skip, limit=limit)
     return reviews
 
-
+#내용 기준 리뷰검색
 @review_router.get("/search/cotent", response_model=List[schemas.ReviewOutSimple])
 async def search_review_list_content(
     keyword: str = Query('', description="검색어"),
@@ -48,8 +48,8 @@ async def search_review_list_content(
     reviews = await service.search_reviews_content(db=db, keyword=keyword, skip=skip, limit=limit)
     return reviews
 
-
-@review_router.get("/search/reviewuser", response_model=List[schemas.ReviewOutSimple])
+#user기준 리뷰 검색
+@review_router.get("/search/review/user", response_model=List[schemas.ReviewOutSimple])
 async def search_review_list_user(
     keyword: str = Query('', description="검색어"),
     skip: int = Query(0, ge=0, description="건너뛸 개수(페이징)"),
@@ -70,19 +70,19 @@ async def search_review_list_user(
 
 
 
-
+#리뷰 날짜 최신부터
 @review_router.get("/list/dates/desc", response_model=List[schemas.ReviewOutSimple])
 async def get_reviews_list_date_desc(db: AsyncSession = Depends(get_db)):
     return await service.get_reviews_list_date_desc(db, limit=10)
 
-
+#리뷰 날짜 옛날부터
 @review_router.get("/list/dates/asc", response_model=List[schemas.ReviewOutSimple])
 async def get_reviews_list_date_asc(db: AsyncSession = Depends(get_db)):
     return await service.get_reviews_list_date_asc(db, limit=10)
 
 
 
-
+#리뷰 좋아요순으로
 @review_router.get("/list/vote/desc", response_model=List[schemas.ReviewOutSimple])
 async def get_reviews_list_vote(db: AsyncSession = Depends(get_db)):
     return await service.get_reviews_list_vote(db, limit=10)
@@ -146,31 +146,7 @@ async def review_delete(
     return {"message": "삭제 완료"}
 
 
-'''
-@review_router.post("/vote", status_code=status.HTTP_204_NO_CONTENT)
-async def review_vote(_review_vote: schemas.ReviewVote,
-                        db: AsyncSession = Depends(get_db),
-                        current_user: User = Depends(get_current_user)):
-    db_review = await service.get_review(db, review_id=_review_vote.review_id)
-    if not db_review:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                            detail="데이터를 찾을수 없습니다.")
-    await service.vote_review(db, review_id=db_review, db_user=current_user)
-    
-@review_router.post("/vote/{review_id}", response_model=schemas.ReviewOutSimple)
-async def review_vote(
-    review_id: int,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    try:
-        review = await service.vote_review(db, review_id, current_user)
-        return review
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
 
-
-'''
 #좋아요
 @review_router.post("/vote/{review_id}", status_code=204)
 async def review_vote(
@@ -193,8 +169,17 @@ async def like_delete(
     result = await service.delte_vote(db, current_user.id, review_id)
     return result
 
+#내가 쓴 리뷰
+@review_router.get("/my/comments", response_model=List[schemas.ReviewOutSimple])
+async def comments_by_review(
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    return await service.get_my_reviews(db,user) 
 
 
+
+#리뷰의 좋아요 수 세기
 @review_router.get("/vote_count/{review_id}")
 async def get_vote_count(
     review_id: int,
@@ -203,7 +188,7 @@ async def get_vote_count(
     count = await service.get_review_vote_count(db, review_id)
     return {"review_id": review_id, "vote_count": count}
 
-
+#좋아요 한 리뷰 불러오기
 @review_router.get("/liked-reviews", response_model=List[schemas.ReviewOutSimple])
 async def liked_reviews(
     db: AsyncSession = Depends(get_db),

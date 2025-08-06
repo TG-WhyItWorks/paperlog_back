@@ -34,6 +34,7 @@ class User(BaseModel):
     email:str
     phonenumber:str
     
+    
 
 
 
@@ -50,11 +51,14 @@ class Token(BaseModel):
 class UserRead(BaseModel):
     username: str
     email: EmailStr
-
+    nickname:str
     model_config=ConfigDict(from_attributes=True)
 
 
-
+class UserUpdate(BaseModel):
+    nickname:str
+    
+    
 
 class FolderRead(BaseModel):
     id: int

@@ -54,10 +54,7 @@ async def readpaper_delete(
 
 
 #이거 써야함
-@readpaper_router.get(
-    "/my-papers",
-    response_model=List[PaperOut]
-)
+@readpaper_router.get( "/my-papers",response_model=List[PaperOut])
 async def get_my_papers(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
