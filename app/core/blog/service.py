@@ -7,7 +7,7 @@ from app.core.user.models import User
 from app.core.blog.models import Review,review_voter,ReviewImage
 from app.core.search.models import Paper
 from app.core.comment.models import Comment
-from sqlalchemy import func,desc,asc,func
+from sqlalchemy import func,desc,asc,func,delete
 from typing import List,Optional
 from uuid import uuid4
 import aiofiles
@@ -15,6 +15,8 @@ import os
 from fastapi import UploadFile, File
 
 IMAGE_DIR = "static/images/reviews"
+
+
 async def search_reviews(
     db: AsyncSession, keyword: str = '', skip: int = 0, limit: int = 10
 ):
@@ -66,7 +68,7 @@ async def get_reviews_list_vote(db: AsyncSession, limit: int = 10):
         )
         .outerjoin(review_voter, Review.id == review_voter.c.review_id)
         .group_by(Review.id)
-        .order_by(desc("vote_count"))
+        .order_by(desc("vote_count"),Review.create_date.desc())
         .limit(limit)
         .options(
             selectinload(Review.user),
@@ -78,10 +80,10 @@ async def get_reviews_list_vote(db: AsyncSession, limit: int = 10):
     result = await db.execute(stmt)
    
     rows = result.all()
-    return rows  
+    return [row[0] for row in rows]
 
 
-async def get_reviews_list_date(db: AsyncSession, limit: int = 10):
+async def get_reviews_list_date_desc(db: AsyncSession, limit: int = 10):
     stmt = (
         select(Review)
         .order_by(Review.create_date.desc())
@@ -97,7 +99,21 @@ async def get_reviews_list_date(db: AsyncSession, limit: int = 10):
     reviews = result.scalars().all()
     return reviews
 
-
+async def get_reviews_list_date_asc(db: AsyncSession, limit: int = 10):
+    stmt = (
+        select(Review)
+        .order_by(Review.create_date.asc())
+        .limit(limit)
+        .options(
+            selectinload(Review.user),
+            selectinload(Review.images),
+            selectinload(Review.voter),
+            selectinload(Review.paper),
+        )
+    )
+    result = await db.execute(stmt)
+    reviews = result.scalars().all()
+    return reviews
 
 
 async def get_review(db: AsyncSession, review_id: int):
@@ -194,6 +210,33 @@ async def vote_review(db: AsyncSession, review_id: int, user: User):
 
 
 
+async def delte_vote(db: AsyncSession, user_id: int, review_id: int):
+
+    stmt = (
+        select(review_voter)
+        .where(
+            (review_voter.c.user_id == user_id) &
+            (review_voter.c.review_id == review_id)
+        )
+    )
+    result = await db.execute(stmt)
+    like = result.first()
+    
+    if not like:
+
+        return {"message": "좋아요 없습니다"}
+    
+    delete_stmt = (
+        delete(review_voter)
+        .where(
+            (review_voter.c.user_id == user_id) &
+            (review_voter.c.review_id == review_id)
+        )
+    )
+    await db.execute(delete_stmt)
+    await db.commit()
+    return {"message": "좋아요가 정상적으로 취소되었습니다."}
+
 async def get_review_vote_count(db: AsyncSession, review_id: int) -> int:
     
     stmt = select(func.count()).select_from(review_voter).where(
@@ -218,6 +261,145 @@ async def get_liked_review(db:AsyncSession,user:User)->List[Review]:
     )
     result = await db.execute(stmt)
     return result.scalars().all()
+
+
+
+
+
+
+
+
+async def search_reviews_title(
+    db: AsyncSession, keyword: str = '', skip: int = 0, limit: int = 10
+):
+    query = select(Review)
+    
+    if keyword:
+        search = f"%{keyword}%"
+        from sqlalchemy.orm import aliased
+        UserAlias = aliased(User)
+        PaperAlias = aliased(Paper)
+        query = (
+            query
+            .join(UserAlias, Review.user_id == UserAlias.id, isouter=True)
+            .join(PaperAlias, Review.paper_id == PaperAlias.arxiv_id, isouter=True)
+            
+            .where(
+                    Review.title.ilike(search),
+            )
+        )
+
+    query = (
+        query
+        .order_by(Review.create_date.desc())
+        .offset(skip)
+        .limit(limit)
+        .options(
+            selectinload(Review.user),
+            selectinload(Review.paper),
+            selectinload(Review.images),
+            selectinload(Review.voter),
+        )
+    )
+
+    result = await db.execute(query)
+    reviews = result.scalars().all()
+    return reviews
+
+async def search_reviews_content(
+    db: AsyncSession, keyword: str = '', skip: int = 0, limit: int = 10
+):
+    query = select(Review)
+    
+    if keyword:
+        search = f"%{keyword}%"
+        from sqlalchemy.orm import aliased
+        UserAlias = aliased(User)
+        PaperAlias = aliased(Paper)
+        query = (
+            query
+            .join(UserAlias, Review.user_id == UserAlias.id, isouter=True)
+            .join(PaperAlias, Review.paper_id == PaperAlias.arxiv_id, isouter=True)
+            
+            .where(
+                    Review.content.ilike(search),
+            )
+        )
+
+    query = (
+        query
+        .order_by(Review.create_date.desc())
+        .offset(skip)
+        .limit(limit)
+        .options(
+            selectinload(Review.user),
+            selectinload(Review.paper),
+            selectinload(Review.images),
+            selectinload(Review.voter),
+        )
+    )
+
+    result = await db.execute(query)
+    reviews = result.scalars().all()
+    return reviews
+
+
+
+async def search_reviews_user(
+    db: AsyncSession, keyword: str = '', skip: int = 0, limit: int = 10
+):
+    query = select(Review)
+    
+    if keyword:
+        search = f"%{keyword}%"
+        from sqlalchemy.orm import aliased
+        UserAlias = aliased(User)
+        PaperAlias = aliased(Paper)
+        query = (
+            query
+            .join(UserAlias, Review.user_id == UserAlias.id, isouter=True)
+            .join(PaperAlias, Review.paper_id == PaperAlias.arxiv_id, isouter=True)
+            
+            .where(
+                    UserAlias.username.ilike(search)
+            )
+        )
+
+    query = (
+        query
+        .order_by(Review.create_date.desc())
+        .offset(skip)
+        .limit(limit)
+        .options(
+            selectinload(Review.user),
+            selectinload(Review.paper),
+            selectinload(Review.images),
+            selectinload(Review.voter),
+        )
+    )
+
+    result = await db.execute(query)
+    reviews = result.scalars().all()
+    return reviews
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

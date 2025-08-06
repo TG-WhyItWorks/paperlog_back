@@ -1,8 +1,8 @@
-"""Init after reset DB
+"""empty message
 
-Revision ID: 561c5eb87933
+Revision ID: 4eeeaf36d9ba
 Revises: 
-Create Date: 2025-08-01 17:59:45.409158
+Create Date: 2025-08-06 12:13:14.622382
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '561c5eb87933'
+revision: str = '4eeeaf36d9ba'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -47,7 +47,8 @@ def upgrade() -> None:
     sa.Column('modify_date', sa.DateTime(), nullable=True),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_user')),
     sa.UniqueConstraint('email', name=op.f('uq_user_email')),
-    sa.UniqueConstraint('phonenumber', name=op.f('uq_user_phonenumber'))
+    sa.UniqueConstraint('phonenumber', name=op.f('uq_user_phonenumber')),
+    sqlite_autoincrement=True
     )
     op.create_table('folders',
     sa.Column('id', sa.Integer(), nullable=False),
@@ -94,7 +95,8 @@ def upgrade() -> None:
     sa.Column('modify_date', sa.DateTime(), nullable=True),
     sa.ForeignKeyConstraint(['review_id'], ['review.id'], name=op.f('fk_comment_review_id_review')),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], name=op.f('fk_comment_user_id_user')),
-    sa.PrimaryKeyConstraint('id', name=op.f('pk_comment'))
+    sa.PrimaryKeyConstraint('id', name=op.f('pk_comment')),
+    sqlite_autoincrement=True
     )
     op.create_table('folder_papers',
     sa.Column('id', sa.Integer(), nullable=False),

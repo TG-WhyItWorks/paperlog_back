@@ -24,9 +24,63 @@ async def search_review_list(
 
 
 
+
+@review_router.get("/search/title", response_model=List[schemas.ReviewOutSimple])
+async def search_review_list_title(
+    keyword: str = Query('', description="검색어"),
+    skip: int = Query(0, ge=0, description="건너뛸 개수(페이징)"),
+    limit: int = Query(10, le=100, description="가져올 개수(페이징)"),
+    db: AsyncSession = Depends(get_db)
+):
+ 
+    reviews = await service.search_reviews_title(db=db, keyword=keyword, skip=skip, limit=limit)
+    return reviews
+
+
+@review_router.get("/search/cotent", response_model=List[schemas.ReviewOutSimple])
+async def search_review_list_content(
+    keyword: str = Query('', description="검색어"),
+    skip: int = Query(0, ge=0, description="건너뛸 개수(페이징)"),
+    limit: int = Query(10, le=100, description="가져올 개수(페이징)"),
+    db: AsyncSession = Depends(get_db)
+):
+ 
+    reviews = await service.search_reviews_content(db=db, keyword=keyword, skip=skip, limit=limit)
+    return reviews
+
+
+@review_router.get("/search/reviewuser", response_model=List[schemas.ReviewOutSimple])
+async def search_review_list_user(
+    keyword: str = Query('', description="검색어"),
+    skip: int = Query(0, ge=0, description="건너뛸 개수(페이징)"),
+    limit: int = Query(10, le=100, description="가져올 개수(페이징)"),
+    db: AsyncSession = Depends(get_db)
+):
+ 
+    reviews = await service.search_reviews_user(db=db, keyword=keyword, skip=skip, limit=limit)
+    return reviews
+
+
+
+
+
+
+
+
+
+
+
+
 @review_router.get("/list/dates/desc", response_model=List[schemas.ReviewOutSimple])
-async def get_reviews_list_date(db: AsyncSession = Depends(get_db)):
-    return await service.get_reviews_list_date(db, limit=10)
+async def get_reviews_list_date_desc(db: AsyncSession = Depends(get_db)):
+    return await service.get_reviews_list_date_desc(db, limit=10)
+
+
+@review_router.get("/list/dates/asc", response_model=List[schemas.ReviewOutSimple])
+async def get_reviews_list_date_asc(db: AsyncSession = Depends(get_db)):
+    return await service.get_reviews_list_date_asc(db, limit=10)
+
+
 
 
 @review_router.get("/list/vote/desc", response_model=List[schemas.ReviewOutSimple])
@@ -117,7 +171,7 @@ async def review_vote(
 
 
 '''
-
+#좋아요
 @review_router.post("/vote/{review_id}", status_code=204)
 async def review_vote(
     review_id: int,
@@ -125,6 +179,20 @@ async def review_vote(
     current_user: User = Depends(get_current_user)
 ):
     await service.vote_review(db, review_id, current_user)
+
+
+
+
+#좋아요 삭제하기
+@review_router.delete("/reviews/{review_id}/like")
+async def like_delete(
+    review_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    result = await service.delte_vote(db, current_user.id, review_id)
+    return result
+
 
 
 @review_router.get("/vote_count/{review_id}")
