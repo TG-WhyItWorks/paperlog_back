@@ -1,8 +1,8 @@
-"""Init after reset DB
+"""empty message
 
-Revision ID: 561c5eb87933
+Revision ID: 59c46fb8d711
 Revises: 
-Create Date: 2025-08-01 17:59:45.409158
+Create Date: 2025-08-07 18:23:23.696170
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '561c5eb87933'
+revision: str = '59c46fb8d711'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -98,6 +98,7 @@ def upgrade() -> None:
     )
     op.create_table('folder_papers',
     sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('folder_paper_name', sa.String(length=200), nullable=False),
     sa.Column('folder_id', sa.Integer(), nullable=False),
     sa.Column('paper_id', sa.Integer(), nullable=True),
     sa.Column('review_id', sa.Integer(), nullable=True),
