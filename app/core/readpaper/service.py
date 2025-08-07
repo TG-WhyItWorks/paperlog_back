@@ -28,7 +28,25 @@ async def get_mypaper(db: AsyncSession, user_id: int) -> List[Paper]:
     result = await db.execute(stmt)
     return result.scalars().all()
 
-async def create_readpaper(db: AsyncSession, readpaper_create: ReadPaperCreate,user:User):
+async def create_readpaper(db: AsyncSession, readpaper_create: ReadPaperCreate, user: User):
+
+    from sqlalchemy import select
+
+    stmt = (
+        select(ReadPaper)
+        .where(
+            (ReadPaper.user_id == user.id) &
+            (ReadPaper.paper_id == readpaper_create.paper_id)
+        )
+    )
+    result = await db.execute(stmt)
+    existing = result.scalar_one_or_none()
+
+    if existing:
+        
+        return {"message": "이미 읽은 논문으로 등록되어 있습니다."}
+
+    # 없으면 새로 추가
     db_readpaper = ReadPaper(
         user_id=user.id,
         paper_id=readpaper_create.paper_id,
@@ -37,7 +55,7 @@ async def create_readpaper(db: AsyncSession, readpaper_create: ReadPaperCreate,u
     db.add(db_readpaper)
     await db.commit()
     await db.refresh(db_readpaper)
-    return db_readpaper
+    return {"message": "리뷰가 성공적으로 작성되었습니다."}
 
 
 

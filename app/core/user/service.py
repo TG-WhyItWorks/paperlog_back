@@ -1,9 +1,9 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from app.core.user.schemas import UserCreate
+from app.core.user.schemas import UserCreate,UserUpdate
 from app.core.user.models import User
 from passlib.context import CryptContext
-
+from datetime import datetime,UTC
 
 pwd_context = CryptContext(schemes=["bcrypt"],deprecated="auto")
 
@@ -57,6 +57,13 @@ async def get_or_create_google_user(session: AsyncSession, email: str, username:
     return user
 
 
-
+async def update_user(db: AsyncSession, db_user: User, user_update: UserUpdate):
+    db_user.nickname = user_update.nickname
+    db_user.phonenumber = user_update.phonenumber
+    db_user.modify_date=datetime.now(UTC)
+    db.add(db_user)
+    await db.commit()
+    await db.refresh(db_user)
+    return db_user
 
 

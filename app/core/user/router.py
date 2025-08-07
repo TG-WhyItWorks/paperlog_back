@@ -5,9 +5,9 @@ from jose import jwt, JWTError
 from starlette import status
 from app.core.user.models import User
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.common.dependencies import get_db  
+from app.common.dependencies import get_db ,get_current_user
 from app.core.user import service, schemas
-from app.core.user.service import pwd_context,get_user_by_email
+from app.core.user.service import pwd_context,get_user_by_email,update_user
 from datetime import datetime, UTC
 import os
 from dotenv import load_dotenv
@@ -70,3 +70,17 @@ async def login_for_access_token(
             
         }
     })
+
+
+@user_router.put("/update",status_code=200)
+async def user_update(
+    _user_update:schemas.UserUpdate,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user)
+):
+    await update_user(db,user,_user_update)
+    return {"message":"수정 성공"}
+    
+    
+
+

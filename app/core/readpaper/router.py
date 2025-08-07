@@ -15,12 +15,12 @@ readpaper_router = APIRouter()
 # 작성
 @readpaper_router.post("/create", status_code=201)
 async def readpaper_create(
-    _readpaper_create:schemas.ReadPaperCreate,
+    _readpaper_create: schemas.ReadPaperCreate,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):  
-    await service.create_readpaper(db=db, readpaper_create=_readpaper_create,user=current_user)
-    return {"message": "리뷰가 성공적으로 작성되었습니다."}
+    result = await service.create_readpaper(db=db, readpaper_create=_readpaper_create, user=current_user)
+    return result
 
 # 수정
 @readpaper_router.put("/update", status_code=200)
@@ -54,10 +54,7 @@ async def readpaper_delete(
 
 
 #이거 써야함
-@readpaper_router.get(
-    "/my-papers",
-    response_model=List[PaperOut]
-)
+@readpaper_router.get("/my-papers",response_model=List[PaperOut])
 async def get_my_papers(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
