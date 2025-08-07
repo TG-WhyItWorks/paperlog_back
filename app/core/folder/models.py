@@ -27,6 +27,7 @@ class FolderPaper(Base):
     __tablename__ = "folder_papers"
         
     id = Column(Integer, primary_key=True, index=True)
+    folder_paper_name = Column(String(200), nullable=False)
     folder_id = Column(Integer, ForeignKey("folders.id", ondelete="CASCADE"), nullable=False)
     paper_id = Column(Integer, ForeignKey("papers.id", ondelete="CASCADE"), nullable=True)
     review_id = Column(Integer, ForeignKey("review.id", ondelete="CASCADE"), nullable=True)

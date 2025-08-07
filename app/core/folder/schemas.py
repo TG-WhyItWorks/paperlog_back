@@ -7,7 +7,7 @@ from datetime import datetime
 
 class FolderBase(BaseModel):
     folder_name: str
-    parent_folder_id: Optional[int] = None
+    parent_folder_id: Optional[int] = Field(default=None, nullable=True)
     
     
 class FolderCreate(FolderBase):
@@ -34,6 +34,7 @@ class FolderResponse(FolderBase):
 
 # 폴더에 논문/블로그 추가 요청용
 class FolderPaperCreate(BaseModel):
+    folder_paper_name: str
     folder_id: int
     paper_id: Optional[int] = None
     review_id: Optional[int] = None
@@ -54,13 +55,18 @@ class FolderPaperDelete(BaseModel):
     
     
 class FolderPaperResponse(BaseModel):
+    folder_paper_name: str
+    id: int
     folder_id: int
-    paper_id: Optional[int] = None
+    paper_arxiv_id: Optional[str] = None
     review_id: Optional[int] = None
+    paper_title: Optional[str] = None
+    review_title: Optional[str] = None
     
     class Config:
         from_attributes = True
         
+
 
 class FolderDetailResponse(FolderResponse):
     subfolders: List["FolderDetailResponse"] = []
