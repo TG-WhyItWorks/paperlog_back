@@ -60,10 +60,11 @@ async def get_or_create_google_user(session: AsyncSession, email: str, username:
 async def update_user(db: AsyncSession, db_user: User, user_update: UserUpdate):
     db_user.nickname = user_update.nickname
     db_user.phonenumber = user_update.phonenumber
+    db_user.bio = user_update.bio
+    db_user.intro = user_update.intro
     db_user.modify_date=datetime.now(UTC)
     db.add(db_user)
     await db.commit()
     await db.refresh(db_user)
     return db_user
-
 

@@ -83,4 +83,11 @@ async def user_update(
     
     
 
-
+@user_router.get("/myprofile")
+async def user_profile(current_user:User=Depends(get_current_user)):
+     return schemas.UserProfile(
+        username=current_user.username,
+        email=current_user.email,
+        nickname=current_user.nickname,
+        phonenumber=current_user.phonenumber
+    )
