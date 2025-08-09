@@ -9,7 +9,7 @@ load_dotenv(".env")
 SECRET_KEY = os.getenv("JWT_SECRET_KEY")
 if not isinstance(SECRET_KEY, str):
     raise ValueError("JWT_SECRET_KEY must be a string.")
-
+REFRESH_TOKEN_DAYS = int(os.getenv("REFRESH_TOKEN_DAYS", 14))
 ALGORITHM = "HS256"
 EXPIRE_MINUTES = 60
 
@@ -33,3 +33,19 @@ def create_access_token(user_id: int, email: str) -> str:
         "exp": int(expire.timestamp())  # 만료 시간
     }
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+
+
+def create_refresh_token(*, user_id: int, email: str) -> str:
+    now = datetime.now(UTC)
+    expire = now + timedelta(days=REFRESH_TOKEN_DAYS)
+    payload = {
+        "sub": str(user_id),
+        "email": email,
+        "type": "refresh",
+        "iat": int(now.timestamp()),
+        "exp": int(expire.timestamp()),
+    }
+    return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+
+def decode_token(token: str) -> dict:
+    return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
