@@ -20,6 +20,19 @@ class ArxivSearchRequest(BaseModel):
     page_size: int = 10
     sort_by: str = "relevance"# relevance, LastUpdatedDate, submittedDate 중 택 1
     
+    
+class PaperLikeCreate(BaseModel):
+    paper_id: int
+
+class PaperLikeOut(BaseModel):
+    id: int
+    user_id_: int
+    paper_id: int
+    liked_at: datetime
+    
+    class Config:
+        from_attributes = True
+        
 
 class PaperOut(PaperCreate):
     id :int
@@ -27,6 +40,9 @@ class PaperOut(PaperCreate):
     created_at: datetime
     
     reviews: List[ReviewOutSimple] = [] # review 간략화 리스트
+    
+    like_count: int = 0
+    is_liked: Optional[bool] = None # 현재 사용자가 좋아요 했는지(로그인한 경우에만)
     
     # authors와 categories를 str -> list
     @field_validator('authors', mode="before")

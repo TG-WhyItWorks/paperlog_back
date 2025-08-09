@@ -16,3 +16,4 @@ class User(Base):
     modify_date = Column(DateTime, nullable=True)
     readpapers= relationship("ReadPaper", back_populates="user",lazy="selectin")
     folders = relationship("Folder", back_populates="user", lazy="selectin")
+    paper_likes = relationship("PaperLike", back_populates="user", cascade="all, delete-orphan", lazy="selectin")
