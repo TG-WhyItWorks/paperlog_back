@@ -1,6 +1,9 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from app.core.search.models import Paper
+from sqlalchemy import select, and_, func, exists
+from sqlalchemy.orm import selectinload
+from typing import Optional, List
+from app.core.search.models import Paper, PaperLike
+from app.core.search.schemas import PaperLikeCreate
 from datetime import datetime, UTC
 
 def list_to_str(lst):
@@ -54,3 +57,216 @@ async def get_paginated_papers(db:AsyncSession, page: int, page_size: int = 10):
     stmt = select(Paper).offset((page - 1) * page_size).limit(page_size)
     result = await db.execute(stmt)
     return result.scalars().all()
+
+
+async def get_paginated_papers_with_like_info(
+    db: AsyncSession,
+    page: int,
+    page_size: int = 10,
+    user_id: Optional[int] = None
+):
+    like_count_subq = (
+        select(func.count(PaperLike.id))
+        .where(PaperLike.paper_id == Paper.id)
+        .scalar_subquery()
+        .label("like_count")
+    )
+    
+    if user_id:
+        is_liked_subq = (
+            select(func.count(PaperLike.id))
+            .where(
+                and_(
+                    PaperLike.paper_id == Paper.id,
+                    PaperLike.user_id == user_id
+                )
+            )
+            .scalar_subquery() > 0
+        ).label("is_liked")
+        
+        stmt = (
+            select(Paper, like_count_subq, is_liked_subq)
+            .offset((page -1) * page_size)
+            .limit(page_size)
+        )
+    else:
+        stmt = (
+            select(Paper, like_count_subq)
+            .offset((page - 1) * page_size)
+            .limit(page_size)
+        )
+        
+    result = await db.execute(stmt)
+    
+    papers_data = []
+    for row in result:
+        paper = row[0] # Paper 객체
+        like_count = row[1] # 좋아요 수
+        
+        
+        paper_dict = {
+            "id": paper.id,
+            "arxiv_id": paper.arxiv_id,
+            "title": paper.title,
+            "authors": paper.authors,
+            "summary": paper.summary,
+            "link": paper.link,
+            "published": paper.published,
+            "publish_updated": paper.publish_updated,
+            "categories": paper.categories,
+            "doi": paper.doi,
+            "created_at": paper.created_at,
+            "updated_at": paper.updated_at,
+            "reviews": paper.reviews,
+            "like_count": like_count
+        }
+        
+        if user_id:
+            is_liked = row[2] # 사용자 좋아요 여부
+            paper_dict["is_liked"] = is_liked
+            
+        papers_data.append(paper_dict)
+        
+    return papers_data
+
+async def get_papers_with_like_info(db: AsyncSession, arxiv_id: str, user_id: Optional[int] = None):
+    """좋아요 정보를 포함한 특정 논문 조회"""
+    
+    like_count_subq = (
+        select(func.count(PaperLike.id))
+        .where(PaperLike.paper_id == Paper.id)
+        .scalar_subquery()
+        .label("like_count")
+    )
+    # 로그인 했을 때만 유저가 좋아요 했는지 체크
+    if user_id:
+        is_liked_subq = (
+            select(func.count(PaperLike.id))
+            .where(
+                and_(
+                    PaperLike.paper_id == Paper.id,
+                    PaperLike.user_id == user_id
+                )
+            )
+            .scalar_subquery() > 0
+        ).label("is_liked")
+        
+        stmt = (
+            select(Paper, like_count_subq, is_liked_subq)
+            .filter(Paper.arxiv_id == arxiv_id)
+        )
+    else:
+        stmt = (
+            select(Paper, like_count_subq)
+            .filter(Paper.arxiv_id == arxiv_id)
+        )
+        
+    result = await db.execute(stmt)
+    row = result.first()
+    
+    if not row:
+        return None
+    
+    paper = row[0] # Paper 객체
+    like_count = row[1] # 좋아요 수
+    
+    paper_dict = {
+            "id": paper.id,
+            "arxiv_id": paper.arxiv_id,
+            "title": paper.title,
+            "authors": paper.authors,
+            "summary": paper.summary,
+            "link": paper.link,
+            "published": paper.published,
+            "publish_updated": paper.pablish_updated,
+            "categories": paper.categories,
+            "doi": paper.doi,
+            "created_at": paper.created_at,
+            "updated_at": paper.updated_at,
+            "reviews": paper.reviews,
+            "like_count": like_count
+        }
+    
+    if user_id:
+            is_liked = row[2] # 사용자 좋아요 여부
+            paper_dict["is_liked"] = is_liked
+            
+    return paper_dict
+
+
+
+class PaperLikeRepository:
+    def __init__(self, db: AsyncSession):
+        self.db = db
+        
+    async def create_like(self, user_id: int, paper_like: PaperLikeCreate) -> PaperLike:
+        db_like = PaperLike(
+            user_id=user_id,
+            paper_id=paper_like.paper_id
+            )
+        self.db.add(db_like)
+        await self.db.commit()
+        await self.db.refresh(db_like)
+        return db_like
+    
+    
+    async def remove_like(self, user_id: int, paper_id: int) -> bool:
+        stmt = select(PaperLike).filter(
+            and_(
+                PaperLike.user_id == user_id,
+                PaperLike.paper_id == paper_id
+            )
+        )
+        result = await self.db.execute(stmt)
+        like = result.scalar_one_or_none()
+        
+        if like:
+            await self.db.delete(like)
+            await self.db.commit()
+            return True
+        return False
+    
+    async def get_like(self, user_id: int, paper_id: int) -> Optional[PaperLike]:
+        stmt = select(PaperLike).filter(
+            and_(
+                PaperLike.user_id == user_id,
+                PaperLike.paper_id == paper_id
+            )
+        )
+        result = await self.db.execute(stmt)
+        return result.scalar_one_or_none()
+    
+    
+    async def is_liked_by_user(self, user_id: int, paper_id: int) -> bool:
+        """사용자가 특정 논문 좋아요 했는지 확인"""
+        stmt = select(PaperLike).filter(
+            and_(
+                PaperLike.user_id == user_id,
+                PaperLike.paper_id == paper_id
+            )
+        )
+        result = await self.db.execute(stmt)
+        return result.scalar()
+    
+    
+    async def get_like_count(self, paper_id: int) -> int:
+        stmt = select(func.count(PaperLike.id)).filter(
+            PaperLike.paper_id == paper_id
+        )
+        result = await self.db.execute(stmt)
+        return result.scalar() or 0
+    
+    async def get_user_liked_papers(self, user_id: int, skip: int = 0, limit: int = 20) -> List[Paper]:
+        """사용자가 좋아요 누른 논문 목록 조회(좋아요 누른 시각 내림차순)"""
+        stmt = (
+            select(Paper)
+            .join(PaperLike)
+            .filter(PaperLike.user_id == user_id)
+            .options(selectinload(Paper.paper_likes))
+            .order_by(PaperLike.liked_at.desc())
+            .offset(skip)
+            .limit(limit)
+        )
+        result = await self.db.execute(stmt)
+        return result.scalars().all()
+    

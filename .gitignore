@@ -28,3 +28,5 @@ Thumbs.db
 
 # alembic 사용시 생성되는 로컬 DB
 *.db
+
+static/images/reviews/*.png
