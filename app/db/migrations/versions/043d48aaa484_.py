@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: 59c46fb8d711
-Revises: 
-Create Date: 2025-08-07 18:23:23.696170
+Revision ID: 043d48aaa484
+Revises: 792c9faa927f
+Create Date: 2025-08-07 20:23:09.700966
 
 """
 from typing import Sequence, Union
@@ -12,8 +12,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '59c46fb8d711'
-down_revision: Union[str, Sequence[str], None] = None
+revision: str = '043d48aaa484'
+down_revision: Union[str, Sequence[str], None] = '792c9faa927f'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -36,18 +36,23 @@ def upgrade() -> None:
     sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_papers'))
     )
-    op.create_index(op.f('ix_papers_arxiv_id'), 'papers', ['arxiv_id'], unique=True)
-    op.create_index(op.f('ix_papers_id'), 'papers', ['id'], unique=False)
+    with op.batch_alter_table('papers', schema=None) as batch_op:
+        batch_op.create_index(batch_op.f('ix_papers_arxiv_id'), ['arxiv_id'], unique=True)
+        batch_op.create_index(batch_op.f('ix_papers_id'), ['id'], unique=False)
+
     op.create_table('user',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('password', sa.String(), nullable=True),
     sa.Column('username', sa.String(), nullable=False),
     sa.Column('email', sa.String(), nullable=False),
     sa.Column('phonenumber', sa.String(), nullable=True),
+    sa.Column('nickname', sa.String(), nullable=True),
     sa.Column('modify_date', sa.DateTime(), nullable=True),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_user')),
     sa.UniqueConstraint('email', name=op.f('uq_user_email')),
-    sa.UniqueConstraint('phonenumber', name=op.f('uq_user_phonenumber'))
+    sa.UniqueConstraint('nickname', name=op.f('uq_user_nickname')),
+    sa.UniqueConstraint('phonenumber', name=op.f('uq_user_phonenumber')),
+    sqlite_autoincrement=True
     )
     op.create_table('folders',
     sa.Column('id', sa.Integer(), nullable=False),
@@ -59,7 +64,9 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], name=op.f('fk_folders_user_id_user')),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_folders'))
     )
-    op.create_index(op.f('ix_folders_id'), 'folders', ['id'], unique=False)
+    with op.batch_alter_table('folders', schema=None) as batch_op:
+        batch_op.create_index(batch_op.f('ix_folders_id'), ['id'], unique=False)
+
     op.create_table('read_papers',
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
@@ -70,8 +77,10 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id', name=op.f('pk_read_papers')),
     sa.UniqueConstraint('user_id', 'paper_id', name='uq_user_paper')
     )
-    op.create_index(op.f('ix_read_papers_paper_id'), 'read_papers', ['paper_id'], unique=False)
-    op.create_index(op.f('ix_read_papers_user_id'), 'read_papers', ['user_id'], unique=False)
+    with op.batch_alter_table('read_papers', schema=None) as batch_op:
+        batch_op.create_index(batch_op.f('ix_read_papers_paper_id'), ['paper_id'], unique=False)
+        batch_op.create_index(batch_op.f('ix_read_papers_user_id'), ['user_id'], unique=False)
+
     op.create_table('review',
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('title', sa.String(), nullable=False),
@@ -79,6 +88,7 @@ def upgrade() -> None:
     sa.Column('create_date', sa.DateTime(), nullable=True),
     sa.Column('modify_date', sa.DateTime(), nullable=True),
     sa.Column('user_id', sa.Integer(), nullable=True),
+    sa.Column('vote_count', sa.Integer(), nullable=True),
     sa.Column('paper_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['paper_id'], ['papers.arxiv_id'], name=op.f('fk_review_paper_id_papers')),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], name=op.f('fk_review_user_id_user')),
@@ -94,7 +104,8 @@ def upgrade() -> None:
     sa.Column('modify_date', sa.DateTime(), nullable=True),
     sa.ForeignKeyConstraint(['review_id'], ['review.id'], name=op.f('fk_comment_review_id_review')),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], name=op.f('fk_comment_user_id_user')),
-    sa.PrimaryKeyConstraint('id', name=op.f('pk_comment'))
+    sa.PrimaryKeyConstraint('id', name=op.f('pk_comment')),
+    sqlite_autoincrement=True
     )
     op.create_table('folder_papers',
     sa.Column('id', sa.Integer(), nullable=False),
@@ -107,7 +118,9 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['review_id'], ['review.id'], name=op.f('fk_folder_papers_review_id_review'), ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_folder_papers'))
     )
-    op.create_index(op.f('ix_folder_papers_id'), 'folder_papers', ['id'], unique=False)
+    with op.batch_alter_table('folder_papers', schema=None) as batch_op:
+        batch_op.create_index(batch_op.f('ix_folder_papers_id'), ['id'], unique=False)
+
     op.create_table('review_image',
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('review_id', sa.Integer(), nullable=False),
@@ -131,17 +144,25 @@ def downgrade() -> None:
     # ### commands auto generated by Alembic - please adjust! ###
     op.drop_table('review_voter')
     op.drop_table('review_image')
-    op.drop_index(op.f('ix_folder_papers_id'), table_name='folder_papers')
+    with op.batch_alter_table('folder_papers', schema=None) as batch_op:
+        batch_op.drop_index(batch_op.f('ix_folder_papers_id'))
+
     op.drop_table('folder_papers')
     op.drop_table('comment')
     op.drop_table('review')
-    op.drop_index(op.f('ix_read_papers_user_id'), table_name='read_papers')
-    op.drop_index(op.f('ix_read_papers_paper_id'), table_name='read_papers')
+    with op.batch_alter_table('read_papers', schema=None) as batch_op:
+        batch_op.drop_index(batch_op.f('ix_read_papers_user_id'))
+        batch_op.drop_index(batch_op.f('ix_read_papers_paper_id'))
+
     op.drop_table('read_papers')
-    op.drop_index(op.f('ix_folders_id'), table_name='folders')
+    with op.batch_alter_table('folders', schema=None) as batch_op:
+        batch_op.drop_index(batch_op.f('ix_folders_id'))
+
     op.drop_table('folders')
     op.drop_table('user')
-    op.drop_index(op.f('ix_papers_id'), table_name='papers')
-    op.drop_index(op.f('ix_papers_arxiv_id'), table_name='papers')
+    with op.batch_alter_table('papers', schema=None) as batch_op:
+        batch_op.drop_index(batch_op.f('ix_papers_id'))
+        batch_op.drop_index(batch_op.f('ix_papers_arxiv_id'))
+
     op.drop_table('papers')
     # ### end Alembic commands ###
