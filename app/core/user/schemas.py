@@ -29,6 +29,27 @@ class Token(BaseModel):
     username:str
     user_id:int
     
+class GoogleLoginIn(BaseModel):
+    id_token: str
+    access_token: str | None = None
+
+
+class TokenUser(BaseModel):
+    id: int
+    email: str
+    username: str
+    
+class TokenBundle(BaseModel):
+    access_token: str
+    refresh_token: str
+    token_type: str = "bearer"
+    user: TokenUser
+
+
+class TokenOut(BaseModel):
+    access_token: str
+    refresh_token: str | None = None
+    token_type: str = "bearer"
 
 class UserProfile(BaseModel):
     username:str
