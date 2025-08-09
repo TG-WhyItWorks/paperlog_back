@@ -35,7 +35,7 @@ class PaperLikeOut(BaseModel):
         
 
 class PaperOut(PaperCreate):
-    id :int
+    #id :int
     updated_at: datetime
     created_at: datetime
     

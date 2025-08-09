@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
-from app.common.dependencies import get_db, get_current_user
+from app.common.dependencies import get_db, get_current_user, get_current_user_optional
 from app.core.search import service
 from app.core.search.schemas import PaperOut, PaperLikeOut, PaperLikeCreate
 
@@ -15,7 +15,7 @@ async def search_papers(
     page: int = Query(1, ge=1, description="페이지 번호"),
     page_size: int = Query(10, le=50, description="페이지당 논문 수"),
     db: AsyncSession = Depends(get_db),
-    current_user = Depends(get_current_user)
+    current_user = Depends(get_current_user_optional)
 ):
     """Arxiv 논문 검색->DB에 저장->해당 페이지에 논문 반환"""
     user_id = current_user.id if current_user else None
@@ -37,7 +37,7 @@ async def search_papers(
 async def get_paper_detail(
     arxiv_id: str,
     db: AsyncSession = Depends(get_db),
-    current_user = Depends(get_current_user)
+    current_user = Depends(get_current_user_optional)
 ):
     user_id = current_user.id if current_user else None
     

@@ -86,7 +86,7 @@ async def get_paginated_papers_with_like_info(
         
         stmt = (
             select(Paper, like_count_subq, is_liked_subq)
-            .offset((page -1) * page_size)
+            .offset((page - 1) * page_size)
             .limit(page_size)
         )
     else:
@@ -171,16 +171,16 @@ async def get_papers_with_like_info(db: AsyncSession, arxiv_id: str, user_id: Op
     like_count = row[1] # 좋아요 수
     
     paper_dict = {
-            "id": paper.id,
+            #"id": paper.id,
             "arxiv_id": paper.arxiv_id,
             "title": paper.title,
             "authors": paper.authors,
             "summary": paper.summary,
             "link": paper.link,
             "published": paper.published,
-            "publish_updated": paper.pablish_updated,
+            "publish_updated": paper.publish_updated,
             "categories": paper.categories,
-            "doi": paper.doi,
+            "doi": paper.doi if paper.doi!=None else 'str',
             "created_at": paper.created_at,
             "updated_at": paper.updated_at,
             "reviews": paper.reviews,
