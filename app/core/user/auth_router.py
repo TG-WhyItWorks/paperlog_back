@@ -219,7 +219,7 @@ async def google_login_mobile(payload: dict = Body(...), db: AsyncSession = Depe
         # ---------- 우리 서비스 JWT 발급 ----------
         access = create_access_token(user_id=user.id, email=user.email)
         refresh = create_refresh_token(user_id=user.id, email=user.email)
-        print("[auth/google] access_token =", access[:70], "...")  # 앞부분만 출력
+        print("[auth/google] access_token =", access, "...")  # 앞부분만 출력
         print("[auth/google] refresh_token =", refresh[:70], "...")
         print(user.id)
         print(user.email)
