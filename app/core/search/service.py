@@ -21,7 +21,9 @@ async def search_and_store_papers(
     
     await repository.save_new_papers(db, papers)# DB에 중복 없이 저장
     
-    return await repository.get_paginated_papers_with_like_info(db, page, page_size, user_id)
+    arxiv_ids = [paper["arxiv_id"] for paper in papers]
+    
+    return await repository.get_paginated_papers_with_like_info(db, arxiv_ids, user_id)
 
 
 async def get_paper_with_reviews(db: AsyncSession, arxiv_id: str):
