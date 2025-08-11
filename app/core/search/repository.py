@@ -18,7 +18,7 @@ ARXIV_CATEGORY_MAPPING = {
     "cs.CV": "Computer Science: Computer Vision and Pattern Recognition",
     "cs.CY": "Computer Science: Computers and Society",
     "cs.DB": "Computer Science: Databases",
-    "cs.DC": "Computer Science: Distributed, Parallel, and Cluster Computing",
+    "cs.DC": "Computer Science: Distributed, Parallel, Cluster Computing",
     "cs.DL": "Computer Science: Digital Libraries",
     "cs.DM": "Computer Science: Discrete Mathematics",
     "cs.DS": "Computer Science: Data Structures and Algorithms",
@@ -189,21 +189,53 @@ def convert_arxiv_categories(categories) -> str:
         return ""
     
     category_list = [cat.strip() for cat in categories if cat.strip()]
-    converted_categories = []
     
-    for category in categories:
+    category_groups = {}
+    unmapped_categories = []
+    
+    for category in category_list:
         category = category.strip()
+        
         if category in ARXIV_CATEGORY_MAPPING:
-            converted_categories.append(ARXIV_CATEGORY_MAPPING[category])
+            full_name = ARXIV_CATEGORY_MAPPING[category]
+            
+            parts = full_name.split(': ', 1)
+            main_category = parts[0]
+            sub_category = parts[1] if len(parts) > 1 else ""
+            
+            # ':' 로 구분하여 큰 범위와 작은 범위 분리
+            if main_category not in category_groups:
+                category_groups[main_category] = set()
+            if sub_category:
+                sub_category = sub_category.replace(', ', ' & ')
+                category_groups[main_category].add(sub_category)
+            else:
+                # sub_category가 없는 경우 빈 set으로 유지(큰 범위만 표시)
+                pass
         else:
-            # 매핑에 없는 카테고리는 원본 그대로 유지
-            converted_categories.append(category)
-    
-    # 중복 제거 (순서 유지)        
-    unique_categories = list(dict.fromkeys(converted_categories))
-    
-    # ' ; '를 구분자로 사용
-    return ";".join(unique_categories)
+            pass # 매핑에 없는 카테고리는 올리지 않음
+            """
+            # 매핑에 없는 카테고리 처리
+            unmapped_categories.append(category)
+            #print(f"'{category}' not found in mapping")
+            
+            # 매핑에 없는 카테고리는 "Other"로 분류
+            if "Other" not in category_groups:
+                category_groups["Other"] = set()
+                category_groups["Other"].add(category)
+            """
+                
+    result_parts = []
+    for main_category in sorted(category_groups.keys()):
+        sub_categories = sorted(list(category_groups[main_category]))  
+        if sub_categories:
+            sub_category_str = ";".join(sub_categories)
+            result_parts.append(f"{main_category}: {sub_category_str}")
+        else:
+            # 작은 범위가 없는 경우 큰 범위만 표시
+            result_parts.append(f"{main_category}")
+            
+    return " | ".join(result_parts)
 
 
 
@@ -247,6 +279,7 @@ async def save_new_papers(db: AsyncSession, papers: list[dict]):
         existing_paper = await get_paper_by_arxiv_id(db, data["arxiv_id"])
         
         if "categories" in data:
+            print(data["categories"])
             data["categories"] = convert_arxiv_categories(data["categories"])
         
         if not existing_paper:
