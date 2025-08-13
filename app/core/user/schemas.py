@@ -5,7 +5,7 @@ from typing import Optional
 class UserCreate(BaseModel):
     username:str
     password:str
-    password_chk:str
+    password_chk:Optional[str]=None
     email:EmailStr
     phonenumber:str
 
@@ -58,6 +58,7 @@ class UserProfile(BaseModel):
     phonenumber:Optional[str] = None
     bio: Optional[str] = None  
     intro: Optional[str] = None
+    readcount:Optional[int]=None
     model_config=ConfigDict(from_attributes=True)
 
 class UserRead(BaseModel):

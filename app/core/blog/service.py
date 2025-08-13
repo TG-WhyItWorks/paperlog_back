@@ -153,6 +153,23 @@ async def get_reviews_list_date_desc(db: AsyncSession, limit: int = 10):
     reviews = result.scalars().all()
     return reviews
 
+async def get_reviews_by_paper(db: AsyncSession, paper_id: int, limit: int = 10):
+    stmt = (
+        select(Review)
+        #.where(Review.paper.has(Paper.id == paper_id))  # ← 여기!
+        .where(Review.paper_id==paper_id)
+        .order_by(Review.create_date.desc())
+        .limit(limit)
+        .options(
+            selectinload(Review.user),
+            selectinload(Review.images),
+            selectinload(Review.voter),
+            selectinload(Review.paper),
+        )
+    )
+    result = await db.execute(stmt)
+    return result.scalars().unique().all()
+
 async def get_reviews_list_date_asc(db: AsyncSession, limit: int = 10):
     stmt = (
         select(Review)

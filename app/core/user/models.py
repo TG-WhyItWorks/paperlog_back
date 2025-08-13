@@ -17,6 +17,7 @@ class User(Base):
     bio = Column(String, unique=False, nullable=True)
     intro = Column(Text, unique=False, nullable=True)
     modify_date = Column(DateTime, nullable=True)
+    readcount=Column(Integer,nullable=True,default=lambda:0)
     follower = Column(Integer, nullable=True, default=lambda: random.randint(2, 37))
     following = Column(Integer, nullable=True, default=lambda: random.randint(2, 37))
     readpapers= relationship("ReadPaper", back_populates="user",lazy="selectin")

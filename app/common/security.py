@@ -11,7 +11,7 @@ if not isinstance(SECRET_KEY, str):
     raise ValueError("JWT_SECRET_KEY must be a string.")
 REFRESH_TOKEN_DAYS = int(os.getenv("REFRESH_TOKEN_DAYS", 14))
 ALGORITHM = "HS256"
-EXPIRE_MINUTES = 60
+EXPIRE_MINUTES = 60*3
 
 '''
 def create_access_token(data: dict):

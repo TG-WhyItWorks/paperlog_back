@@ -92,6 +92,15 @@ async def get_reviews_list_date_asc(db: AsyncSession = Depends(get_db)):
     return await service.get_reviews_list_date_asc(db, limit=10)
 
 
+#논문 id로 리뷰 찾기
+@review_router.get("/list/paper/{paper_id}", response_model=List[schemas.ReviewOutSimple])
+async def get_reviews_list_by_paper(
+    paper_id: int,                         
+    db: AsyncSession = Depends(get_db)     
+):
+    return await service.get_reviews_by_paper(db, paper_id=paper_id, limit=10)
+
+
 
 #리뷰 좋아요순으로
 @review_router.get("/list/vote/desc", response_model=List[schemas.ReviewOutSimple])
