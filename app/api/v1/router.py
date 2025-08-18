@@ -14,23 +14,3 @@ router.include_router(comment_router,prefix='/api/comment', tags=['Comment'])
 router.include_router(search_router,prefix='/api/arxiv', tags=['Search'])
 router.include_router(readpaper_router,prefix='/api/readpaper', tags=['ReadPaper'])
 router.include_router(folder_router, prefix='/folders', tags=["folders"])
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -51,7 +51,13 @@ class FolderPaperDelete(BaseModel):
     folder_id: int
     paper_id: Optional[int] = None
     review_id: Optional[int] = None
-    
+    paper_arxiv_id: Optional[str] = None
+
+    @model_validator(mode='after')
+    def validate_one_of(cls, values):
+        if not (values.paper_id or values.review_id or values.paper_arxiv_id):
+            raise ValueError("paper_id, review_id 또는 paper_arxiv_id 중 하나는 필요합니다.")
+        return values
     
     
 class FolderPaperResponse(BaseModel):
