@@ -52,6 +52,7 @@ async def create_readpaper(db: AsyncSession, readpaper_create: ReadPaperCreate, 
         paper_id=readpaper_create.paper_id,
         create_date=datetime.now(UTC)
     )
+    user.readcount=user.readcount+1
     db.add(db_readpaper)
     await db.commit()
     await db.refresh(db_readpaper)
@@ -71,7 +72,8 @@ async def update_readpaper(db: AsyncSession, db_readpaper: ReadPaper, readpaper_
 
 
 
-async def delete_readpaper(db: AsyncSession, db_readpaper: ReadPaper):
+async def delete_readpaper(db: AsyncSession, db_readpaper: ReadPaper,user:User):
+    user.readcount=max(0,user.readcount-1)   
     await db.delete(db_readpaper)
     await db.commit()
 

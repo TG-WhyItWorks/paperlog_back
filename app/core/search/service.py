@@ -21,7 +21,9 @@ async def search_and_store_papers(
     
     await repository.save_new_papers(db, papers)# DB에 중복 없이 저장
     
-    return await repository.get_paginated_papers_with_like_info(db, page, page_size, user_id)
+    arxiv_ids = [paper["arxiv_id"] for paper in papers]
+    
+    return await repository.get_paginated_papers_with_like_info(db, arxiv_ids, user_id)
 
 
 async def get_paper_with_reviews(db: AsyncSession, arxiv_id: str):
@@ -46,7 +48,7 @@ async def get_paper_with_reviews_and_likes(db: AsyncSession, arxiv_id: str, user
     if not paper:
         return None
     
-    paper_dict = await repository.get_paginated_papers_with_like_info(db, arxiv_id, user_id)
+    paper_dict = await repository.get_papers_with_like_info(db, arxiv_id, user_id)
     
     if paper_dict:
         paper_dict["reviews"] = paper.reviews

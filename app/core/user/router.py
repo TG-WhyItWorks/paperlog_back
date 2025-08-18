@@ -92,6 +92,7 @@ async def user_profile(current_user=Depends(get_current_user)):
         email=current_user.email,
         nickname=current_user.nickname,
         phonenumber=current_user.phonenumber,
+        readcount=current_user.readcount
     )
 
 

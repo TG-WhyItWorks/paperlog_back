@@ -66,21 +66,34 @@ async def search_reviews(
 async def search_reviews_VoteOrder(
     db: AsyncSession, keyword: str = '', skip: int = 0, limit: int = 10
 ):
-    query = select(
-            Review,
-            func.count(review_voter.c.user_id).label("vote_count")
+    # 1) 좋아요 수 집계 서브쿼리
+    vc_sub = (
+        select(
+            review_voter.c.review_id.label("rid"),
+            func.count(review_voter.c.user_id).label("vc"),
         )
-    
+        .group_by(review_voter.c.review_id)
+        .subquery()
+    )
+
+    # 2) 본쿼리: Review ←(LEFT JOIN) vc_sub
+    query = (
+        select(Review)
+        .outerjoin(vc_sub, Review.id == vc_sub.c.rid)
+    )
+
+    # 3) 키워드 조건(제목/내용/작성자/논문제목)
     if keyword:
-        search = f"%{keyword}%"
         from sqlalchemy.orm import aliased
         UserAlias = aliased(User)
         PaperAlias = aliased(Paper)
+
+        search = f"%{keyword}%"
         query = (
             query
             .join(UserAlias, Review.user_id == UserAlias.id, isouter=True)
-            .join(PaperAlias, Review.paper_id == PaperAlias.arxiv_id, isouter=True)
-            
+            # ✅ Review.paper_id 는 papers.id 를 가리키므로 id 기준으로 조인
+            .join(PaperAlias, Review.paper_id == PaperAlias.id, isouter=True)
             .where(
                 or_(
                     Review.title.ilike(search),
@@ -91,9 +104,10 @@ async def search_reviews_VoteOrder(
             )
         )
 
+    # 4) 정렬(좋아요 DESC → 최신순), 페이징, eager load
     query = (
         query
-        .order_by(desc("vote_count"),Review.create_date.desc())
+        .order_by(func.coalesce(vc_sub.c.vc, 0).desc(), Review.create_date.desc())
         .offset(skip)
         .limit(limit)
         .options(
@@ -105,8 +119,7 @@ async def search_reviews_VoteOrder(
     )
 
     result = await db.execute(query)
-    reviews = result.scalars().all()
-    return reviews
+    return result.scalars().unique().all()
 
 
 
@@ -152,6 +165,23 @@ async def get_reviews_list_date_desc(db: AsyncSession, limit: int = 10):
     result = await db.execute(stmt)
     reviews = result.scalars().all()
     return reviews
+
+async def get_reviews_by_paper(db: AsyncSession, paper_id: int, limit: int = 10):
+    stmt = (
+        select(Review)
+        #.where(Review.paper.has(Paper.id == paper_id))  # ← 여기!
+        .where(Review.paper_id==paper_id)
+        .order_by(Review.create_date.desc())
+        .limit(limit)
+        .options(
+            selectinload(Review.user),
+            selectinload(Review.images),
+            selectinload(Review.voter),
+            selectinload(Review.paper),
+        )
+    )
+    result = await db.execute(stmt)
+    return result.scalars().unique().all()
 
 async def get_reviews_list_date_asc(db: AsyncSession, limit: int = 10):
     stmt = (

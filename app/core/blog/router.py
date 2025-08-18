@@ -48,7 +48,7 @@ async def search_review_list_title(
     return reviews
 
 #내용 기준 리뷰검색
-@review_router.get("/search/cotent", response_model=List[schemas.ReviewOutSimple])
+@review_router.get("/search/content", response_model=List[schemas.ReviewOutSimple])
 async def search_review_list_content(
     keyword: str = Query('', description="검색어"),
     skip: int = Query(0, ge=0, description="건너뛸 개수(페이징)"),
@@ -90,6 +90,15 @@ async def get_reviews_list_date_desc(db: AsyncSession = Depends(get_db)):
 @review_router.get("/list/dates/asc", response_model=List[schemas.ReviewOutSimple])
 async def get_reviews_list_date_asc(db: AsyncSession = Depends(get_db)):
     return await service.get_reviews_list_date_asc(db, limit=10)
+
+
+#논문 id로 리뷰 찾기
+@review_router.get("/list/paper/{paper_id}", response_model=List[schemas.ReviewOutSimple])
+async def get_reviews_list_by_paper(
+    paper_id: int,                         
+    db: AsyncSession = Depends(get_db)     
+):
+    return await service.get_reviews_by_paper(db, paper_id=paper_id, limit=10)
 
 
 
@@ -177,7 +186,7 @@ async def like_delete(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    result = await service.delte_vote(db, current_user.id, review_id)
+    result = await service.delete_vote(db, current_user.id, review_id)
     return result
 
 #내가 쓴 리뷰
