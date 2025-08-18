@@ -27,6 +27,7 @@ class Review(BaseModel):
     modify_date: Optional[datetime] | None = None
     paper_id: Optional[int]
     images:List[ReviewImageRead] = []
+    vote_count:int = 0
     
     model_config=ConfigDict(from_attributes=True)
        

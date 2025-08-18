@@ -16,7 +16,8 @@ class User(BaseModel):
     id:int
     username:str
     email:str
-    phonenumber:str
+    phonenumber:Optional[str] = None       # ← 여기 변경
+    avatar_url: Optional[str] = None 
     
     
 

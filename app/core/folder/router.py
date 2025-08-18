@@ -87,6 +87,34 @@ async def remove_item_by_id(folder_paper_id: int,
     await repository.delete_folder_paper(db, folder_paper)
     return {"detail": "Deleted"}
 
+@folder_router.delete("/{folder_id}/items")
+async def remove_item_from_folder(
+    folder_id: int,
+    payload: schemas.FolderPaperDelete,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    # URL ↔ payload 일치 확인
+    if payload.folder_id != folder_id:
+        raise HTTPException(status_code=400, detail="Folder ID mismatch")
+    # 소유권 확인
+    folder = await repository.get_folder_by_id(db, folder_id, user.id)
+    if not folder:
+        raise HTTPException(status_code=404, detail="Folder not found or access denied")
+    # 항목 조회
+    item = await repository.get_folder_paper(
+        db,
+        folder_id=folder_id,
+        paper_id=payload.paper_id,
+        review_id=payload.review_id,
+        paper_arxiv_id=payload.paper_arxiv_id,
+    )
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found in folder")
+    # 삭제
+    await repository.delete_folder_paper(db, item)
+    return {"detail": "Deleted"}
+
 
 
 @folder_router.get("/root/{folder_id}", response_model=schemas.FolderDetailResponse)

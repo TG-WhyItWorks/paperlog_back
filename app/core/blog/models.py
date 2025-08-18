@@ -44,16 +44,3 @@ class ReviewImage(Base):
     review=relationship("Review",back_populates="images",lazy="selectin")
 
 
-
-        
-    
-    
-    
-    
-    
-        
-    
-    
-    
-    
-    
