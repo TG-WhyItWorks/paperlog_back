@@ -98,3 +98,10 @@ async def get_paper_like_count(
 ):
     like_count = await service.get_paper_like_count(db, paper_id)
     return {"paper_id": paper_id, "like_count": like_count}
+
+@search_router.get("/papers/top/{category}")
+async def get_top_papers_by_category(
+    category: str,
+    db: AsyncSession = Depends(get_db)
+):
+    return await service.get_top_liked_papers_by_category(db, category)
