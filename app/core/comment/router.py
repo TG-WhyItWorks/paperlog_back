@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
-
+from typing import List
 from app.common.dependencies import get_db
 from app.core.comment import schemas as comment_schema
 from app.core.comment import service as comment_crud
@@ -21,7 +21,7 @@ async def comment_create(
 ):
     review = await review_crud.get_review(db, review_id=review_id)
     if not review:
-        raise HTTPException(status_code=404, detail="Review is not found")
+        return {"message": "리뷰가 없습니다"}
     
     await comment_crud.create_comment(
         db=db,
@@ -38,6 +38,26 @@ async def comment_detail(comment_id: int, db: AsyncSession = Depends(get_db)):
     if not comment:
         raise HTTPException(status_code=404, detail="댓글이 존재하지 않습니다.")
     return comment
+
+
+
+@comment_router.get("/review/{review_id}/comments", response_model=List[comment_schema.Comment])
+async def comments_by_review(
+    review_id: int,
+    db: AsyncSession = Depends(get_db),
+):
+    return await comment_crud.get_comments_by_review(db, review_id)
+
+
+@comment_router.get("/my/comments", response_model=List[comment_schema.Comment])
+async def comments_by_review(
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    return await comment_crud.get_my_comments(db,user) 
+
+
+
 
 
 @comment_router.put("/update", status_code=status.HTTP_204_NO_CONTENT)

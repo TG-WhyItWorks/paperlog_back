@@ -2,6 +2,7 @@
 __pycache__/
 *.py[cod]
 *.egg-info/
+*.pyc
 
 # 가상환경
 .venv/
@@ -27,3 +28,5 @@ Thumbs.db
 
 # alembic 사용시 생성되는 로컬 DB
 *.db
+
+static/images/reviews/*.png

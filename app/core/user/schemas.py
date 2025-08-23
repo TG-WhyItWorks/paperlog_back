@@ -1,36 +1,24 @@
-from pydantic import BaseModel, field_validator, EmailStr,ConfigDict
-from pydantic_core.core_schema import FieldValidationInfo
+from pydantic import BaseModel ,EmailStr,ConfigDict
+from datetime import datetime
+from typing import Optional
 
 class UserCreate(BaseModel):
     username:str
     password:str
-    password_chk:str
+    password_chk:Optional[str]=None
     email:EmailStr
     phonenumber:str
 
 
     
-    ''''
-    @field_validator('username', 'password', 'password_chk', 'email','phonenumber')
-    def not_empty(cls, v):
-        if not v or not v.strip():
-            raise ValueError('빈 값은 허용되지 않습니다.')
-        return v
-
-    @field_validator('password_chk')
-    def passwords_match(cls, v, info: FieldValidationInfo):
-        if 'password' in info.data and v != info.data['password']:
-            raise ValueError('비밀번호가 일치하지 않습니다')
-        return v
-
-    '''
-
 
 class User(BaseModel):
     id:int
     username:str
     email:str
-    phonenumber:str
+    phonenumber:Optional[str] = None       # ← 여기 변경
+    avatar_url: Optional[str] = None 
+    
     
 
 
@@ -42,15 +30,60 @@ class Token(BaseModel):
     username:str
     user_id:int
     
+class GoogleLoginIn(BaseModel):
+    id_token: str
+    access_token: str | None = None
 
 
+class TokenUser(BaseModel):
+    id: int
+    email: str
+    username: str
+    
+class TokenBundle(BaseModel):
+    access_token: str
+    refresh_token: str
+    token_type: str = "bearer"
+    user: TokenUser
+
+
+class TokenOut(BaseModel):
+    access_token: str
+    refresh_token: str | None = None
+    token_type: str = "bearer"
+
+class UserProfile(BaseModel):
+    username:str
+    email:str
+    nickname:Optional[str] = None
+    phonenumber:Optional[str] = None
+    bio: Optional[str] = None  
+    intro: Optional[str] = None
+    readcount:Optional[int]=None
+    model_config=ConfigDict(from_attributes=True)
 
 class UserRead(BaseModel):
     username: str
     email: EmailStr
-
+    nickname:str
     model_config=ConfigDict(from_attributes=True)
 
 
+class UserUpdate(BaseModel):
+    nickname:str
+    phonenumber:str
+    bio:str
+    intro:str
+    
 
+class FolderRead(BaseModel):
+    id: int
+    folder_name: str
+    parent_folder_id: Optional[int] = None
+    created_at: datetime
+    
+    model_config = ConfigDict(from_attributes=True)
+    
 
+class UserWithFolders(UserRead):
+    folders: list[FolderRead] = []

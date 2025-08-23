@@ -1,6 +1,6 @@
 
     
-import datetime
+from datetime import datetime 
 
 from pydantic import BaseModel, field_validator,ConfigDict
 from app.core.user.schemas import User
@@ -17,10 +17,10 @@ class CommentCreate(BaseModel):
 class Comment(BaseModel):
     id:int
     content:str
-    create_date:datetime.datetime
+    create_date:datetime
     user:User | None    
     review_id:int
-    modify_date: datetime.datetime | None = None
+    modify_date: datetime| None = None
 
     
     model_config=ConfigDict(from_attributes=True)

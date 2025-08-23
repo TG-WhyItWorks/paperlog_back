@@ -5,13 +5,14 @@ from sqlalchemy import pool
 
 from alembic import context
 
+# 모델 import
 from app.db.base import Base
-
-
 from app.core.user.models import User
-
 from app.core.comment.models import Comment
-from app.core.blog.models import Review
+from app.core.blog.models import Review, ReviewImage, review_voter
+from app.core.search.models import Paper
+from app.core.folder.models import Folder, FolderPaper
+from app.core.readpaper.models import ReadPaper
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
@@ -51,6 +52,7 @@ def run_migrations_offline() -> None:
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
+        render_as_batch=True
     )
 
     with context.begin_transaction():
@@ -72,7 +74,9 @@ def run_migrations_online() -> None:
 
     with connectable.connect() as connection:
         context.configure(
-            connection=connection, target_metadata=target_metadata
+            connection=connection,
+            target_metadata=target_metadata,
+            render_as_batch=True,
         )
 
         with context.begin_transaction():

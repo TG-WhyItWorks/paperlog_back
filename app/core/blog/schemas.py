@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime
 
 from pydantic import BaseModel,field_validator,ConfigDict
 from app.core.user.schemas import User
@@ -11,7 +11,7 @@ from app.core.comment.schemas import Comment
 class ReviewImageRead(BaseModel):
     id: int
     image_path: str
-    upload_date: datetime.datetime
+    upload_date: datetime
 
     model_config=ConfigDict(from_attributes=True)
 
@@ -21,26 +21,28 @@ class Review(BaseModel):
     id:int
     title:str
     content:str
-    create_date:datetime.datetime
-    comment:list[Comment]=[]
+    create_date:datetime
+    comment:list[Comment] = []
     user:User|None    
-    modify_date: datetime.datetime | None = None
+    modify_date: Optional[datetime] | None = None
     paper_id: Optional[int]
-    images:List[ReviewImageRead]
+    images:List[ReviewImageRead] = []
+    vote_count:int = 0
     
     model_config=ConfigDict(from_attributes=True)
-        
-        
+       
+
+
+
+   
 class ReviewCreate(BaseModel): 
     title:str
     content:str
     paper_id:Optional[int] =None
+    vote_count:int =0
     
-    @field_validator('title', 'content')
-    def not_empty(cls,v):
-        if not v or not v.strip():
-            raise ValueError('빈 값은 허용하지 않습니다')
-        return v
+    
+
 
 class ReviewList(BaseModel):
     total : int =0
@@ -56,17 +58,10 @@ class ReviewDelete(BaseModel):
     review_id:int
 
 
-
-
-
-
-
-
-
-
-
-
-
+class ReviewVote(BaseModel):
+    review_id: int
+    
+    
 def get_review_form(
     title: str = Form(...),
     content: str = Form(...),
@@ -77,3 +72,17 @@ def get_review_form(
         "content": content,
         "image": image
     }
+    
+    
+    
+"""아래는 논문과 리뷰 연결에 필요한 코드"""
+
+class ReviewOutSimple(BaseModel):# 논문 상세정보와 함께 뜰 연관 리뷰 요약 리스트
+    id: int
+    title: str
+    content: str
+    modify_date: Optional[datetime]
+    user: Optional[User]
+    vote_count:int
+    model_config = ConfigDict(from_attributes=True)
+
