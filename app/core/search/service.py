@@ -99,3 +99,10 @@ async def get_user_liked_papers(
 async def get_paper_like_count(db: AsyncSession, paper_id: int) -> int:
     like_repo = repository.PaperLikeRepository(db)
     return await like_repo.get_like_count(paper_id)
+
+async def get_top_liked_papers_by_category(
+    db: AsyncSession,
+    category_code: str,
+    limit: int = 5
+):
+    return await repository.get_top_liked_papers_by_category(db, category_code, limit)

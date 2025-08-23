@@ -1,10 +1,12 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_, func, exists
+from sqlalchemy import select, and_, func, desc
 from sqlalchemy.orm import selectinload
+from fastapi import HTTPException
 from typing import Optional, List
+from datetime import datetime, UTC, timedelta
 from app.core.search.models import Paper, PaperLike
 from app.core.search.schemas import PaperLikeCreate
-from datetime import datetime, UTC
+
 
 ARXIV_CATEGORY_MAPPING = {
     # Computer Science(cs)
@@ -523,3 +525,60 @@ class PaperLikeRepository:
         result = await self.db.execute(stmt)
         return result.scalars().all()
     
+
+async def get_top_liked_papers_by_category(
+    db: AsyncSession,
+    category_code: str,
+    limit: int = 5
+):
+    # 최근 1주일간 카테고리별 좋아요 top N 논문, 같은 등수면 publish_updated가 최신인 순으로
+    one_week_ago = datetime.now(UTC) - timedelta(days=7)
+    
+    # cs.AI처럼 ARXIV_CATEGORY 사용
+    if category_code not in ARXIV_CATEGORY_MAPPING:
+        raise HTTPException(status_code=400, detail="Invalid category")
+    category = ARXIV_CATEGORY_MAPPING[category_code]
+    
+    like_count_subq = (
+        select(func.count(PaperLike.id))
+        .where(
+            and_(
+                PaperLike.paper_id == Paper.id,
+                PaperLike.liked_at >= one_week_ago
+            )
+        )
+        .scalar_subquery()
+        .label("like_count")
+    )
+    
+    stmt = (
+        select(Paper, like_count_subq)
+        .where(Paper.categories.like(f"%{category}%"))
+        .order_by(desc(like_count_subq), desc(Paper.publish_updated))
+        .limit(limit)
+    )
+    
+    result = await db.execute(stmt)
+    rows = result.all()
+    
+    if not rows:
+        raise HTTPException(status_code=404, detail="No papers found for this category")
+    
+    return [
+        {
+            "id": paper.id,
+            "arxiv_id": paper.arxiv_id,
+            "title": paper.title,
+            "authors": paper.authors,
+            "summary": paper.summary,
+            "link": paper.link,
+            "published": paper.published,
+            "publish_updated": paper.publish_updated,
+            "categories": paper.categories,
+            "doi": paper.doi,
+            "created_at": paper.created_at,
+            "updated_at": paper.updated_at,
+            "like_count": like_count,
+        }
+        for paper, like_count in rows
+    ]

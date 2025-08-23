@@ -59,15 +59,27 @@ class FolderPaperDelete(BaseModel):
             raise ValueError("paper_id, review_id 또는 paper_arxiv_id 중 하나는 필요합니다.")
         return values
     
+
+
+class PaperResponse(BaseModel):
+    id: int # arxiv_id
+    title: str
+    class Config:
+        from_attributes = True
+        
+class ReviewResponse(BaseModel):
+    id: int
+    title: str
+    class Config:
+        from_attributes = True
+
     
 class FolderPaperResponse(BaseModel):
-    folder_paper_name: str
     id: int
+    folder_paper_name: str
     folder_id: int
-    paper_arxiv_id: Optional[str] = None
-    review_id: Optional[int] = None
-    paper_title: Optional[str] = None
-    review_title: Optional[str] = None
+    paper: Optional[PaperResponse] = None
+    review: Optional[ReviewResponse] = None
     
     class Config:
         from_attributes = True
@@ -78,6 +90,24 @@ class FolderDetailResponse(FolderResponse):
     subfolders: List["FolderDetailResponse"] = []
     folder_papers: List[FolderPaperResponse] = []
     
+    # depth 무제한 지원을 위한 재귀 직렬화 메서드(lazyload 무제한 -> MissingGreenlet 오류 해결)
+    @classmethod
+    def from_orm_recursive(cls, folder: "Folder"):
+        return cls(
+            id=folder.id,
+            folder_name=folder.folder_name,
+            user_id= folder.user_id,
+            parent_folder_id=folder.parent_folder_id,
+            created_at=folder.created_at,
+            folder_papers=[
+                FolderPaperResponse.model_validate(fp) for fp in folder.folder_papers
+                ] if folder.folder_papers else [],
+            subfolders=[
+                cls.from_orm_recursive(sf) for sf in getattr(folder, "subfolders", [])
+                ]
+        )
+    
     class Config:
         from_attributes = True
         
+FolderDetailResponse.model_rebuild()

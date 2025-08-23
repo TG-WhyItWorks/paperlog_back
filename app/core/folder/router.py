@@ -15,19 +15,8 @@ folder_router = APIRouter()
 
 
 def enrich_folder_schema(folder: Folder) -> schemas.FolderDetailResponse:
-    schema = schemas.FolderDetailResponse.model_validate(folder, from_attributes=True)
-    
-    for fp_schema, fp_model in zip(schema.folder_papers, folder.folder_papers):
-            if fp_model.paper:
-                fp_schema.paper_arxiv_id = fp_model.paper.arxiv_id
-                fp_schema.paper_title = fp_model.paper.title
-            else:
-                fp_schema.paper_arxiv_id = None
-                fp_schema.paper_title = None
-            
-            fp_schema.review_title = fp_model.review.title if fp_model.review else None
-    
-    return schema
+    # DB에서 미리 selectinload로 하위 폴더와 item 가져온 상태에서 동기 재귀로 모델 직렬화
+    return schemas.FolderDetailResponse.from_orm_recursive(folder) # 동기 재귀
 
 
 @folder_router.post("/", response_model=schemas.FolderResponse)
@@ -121,16 +110,9 @@ async def remove_item_from_folder(
 async def get_folder_detail(folder_id: int,
                             db: AsyncSession = Depends(get_db),
                             user: User = Depends(get_current_user)):
-    result = await db.execute(
-        select(Folder)
-        .options(
-            selectinload(Folder.subfolders).selectinload(Folder.subfolders),
-            selectinload(Folder.folder_papers).selectinload(FolderPaper.paper),
-            selectinload(Folder.folder_papers).selectinload(FolderPaper.review)
-        )
-        .where(and_(Folder.id == folder_id, Folder.user_id == user.id))
-    )
-    folder = result.scalar_one_or_none()
+    
+    folder = await repository.get_folder_by_id_with_unlimited_tree(db, folder_id, user.id)
+    
     if not folder:
         raise HTTPException(status_code=404, detail="Folder not found or access denied")
     
@@ -141,22 +123,10 @@ async def get_folder_detail(folder_id: int,
 @folder_router.get("/root", response_model=List[schemas.FolderDetailResponse])
 async def get_root_folder(db: AsyncSession = Depends(get_db),
                           user: User = Depends(get_current_user)):
-    result = await db.execute(
-        select(Folder)
-        .options(
-            selectinload(Folder.subfolders).selectinload(Folder.subfolders),
-            selectinload(Folder.folder_papers).selectinload(FolderPaper.paper),
-            selectinload(Folder.folder_papers).selectinload(FolderPaper.review)
-        ).where(and_(Folder.user_id == user.id, Folder.parent_folder_id == None))
-    )
-    folders = result.scalars().all()
+    folders = await repository.get_root_folders_with_unlimited_tree(db, user.id)
+    
     if not folders:
         raise HTTPException(status_code=404, detail="Root folder not found")
     
-    folder_schemas = []
-    for folder in folders:
-        
-        folder_schemas.append(enrich_folder_schema(folder))
-        
-    return folder_schemas
+    return [enrich_folder_schema(f) for f in folders]
     
